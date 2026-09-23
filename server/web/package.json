@@ -1,0 +1,5 @@
+{
+  "name": "localstream-feedback-server",
+  "private": true,
+  "scripts": { "start": "node --env-file=.env app.js", "test": "node --test" }
+}

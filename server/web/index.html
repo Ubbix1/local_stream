@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>LocalStream</title>
+	<link rel="icon" type="image/png" href="/logo.png">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap">
+	<style>
+		:root { color-scheme: light dark; }
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		body {
+			font-family: 'Inter', system-ui, -apple-system, sans-serif;
+			display: flex;
+			min-height: 100vh;
+			align-items: center;
+			justify-content: center;
+			background: radial-gradient(circle at 20% 20%, #123 0%, #06090d 60%) fixed;
+			color: #e8f0f8;
+		}
+		.card {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 28px;
+			padding: 48px 56px;
+			border-radius: 20px;
+			background: rgba(255,255,255,0.04);
+			border: 1px solid rgba(255,255,255,0.10);
+			backdrop-filter: blur(8px);
+			text-align: center;
+		}
+		.logo {
+			width: 200px;
+			height: 200px;
+			object-fit: contain;
+			border-radius: 16px;
+		}
+		h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; }
+		.status { display: flex; align-items: center; gap: 10px; color: #9fb3c8; font-size: 15px; }
+		.dot {
+			width: 10px; height: 10px; border-radius: 50%;
+			background: #2fd06b;
+			box-shadow: 0 0 0 4px rgba(47,208,107,0.15);
+		}
+		footer { font-size: 12px; color: #5b6b7c; }
+	</style>
+</head>
+<body>
+	<main class="card">
+		<img class="logo" src="/logo.png" alt="LocalStream logo">
+		<h1>LocalStream</h1>
+		<div class="status"><span class="dot"></span><span id="status">Checking server…</span></div>
+		<footer>Local media streaming over your network</footer>
+	</main>
+	<script>
+		fetch('/api/health')
+			.then((r) => r.ok ? r.json() : Promise.reject())
+			.then((d) => document.getElementById('status').textContent = d.status === 'ok' ? 'Server online' : 'Server unreachable')
+			.catch(() => document.getElementById('status').textContent = 'Server offline');
+	</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+name: localstream_mobile
+description: LocalStream — turns your Android phone into a local LAN media server.
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  localstream_protocol:
+    path: ../../packages/protocol
+
+  localstream_media_core:
+    path: ../../packages/media_core
+
+  # State management
+  provider: ^6.1.2
+
+  # Format bytes, numbers, dates
+  intl: ^0.19.0
+
+  # Path utilities
+  path: ^1.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+  # Launcher icon generation (run: dart run flutter_launcher_icons)
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logo.png
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icons/app_icon_legacy.png"
+  adaptive_icon_background: "#0d1117"
+  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
+  remove_alpha_ios: true

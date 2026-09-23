@@ -1,0 +1,35 @@
+# ── OS / editor noise ─────────────────────────────
+Thumbs.db
+Desktop.ini
+.DS_Store
+.idea/
+*.iml
+.vscode/
+.fleet/
+
+# ── secrets — NEVER commit ────────────────────────
+server/web/.env
+.env
+.env.local
+.env.*
+!.env.example
+
+# ── build / generated output ──────────────────────
+**/build/
+**/.dart_tool/
+**/.gradle/
+**/.cxx/
+**/node_modules/
+**/.pub-cache/
+**/.packages
+**/*.log
+assets/_generated/
+apps/mobile/assets/_generated/
+
+# ── binary artifacts (stale APKs big enough to wreck the repo) ──
+*.apk
+*.aab
+*.ipa
+
+# ── coverage / test temp ──────────────────────────
+**/coverage/
