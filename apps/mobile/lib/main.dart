@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'features/clients/clients_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/library/library_screen.dart';
 import 'features/server/server_screen.dart';
@@ -33,14 +32,12 @@ class LocalStreamApp extends StatelessWidget {
           colorScheme: ColorScheme.dark(
             primary: const Color(0xFF58A6FF),
             onPrimary: const Color(0xFF0D1117),
-            primaryContainer: const Color(0xFF1F6FEB).withOpacity(0.3),
+            primaryContainer: const Color(0xFF1F6FEB).withValues(alpha: 0.3),
             onPrimaryContainer: const Color(0xFF58A6FF),
             secondary: const Color(0xFF238636),
             surface: const Color(0xFF161B22),
             onSurface: const Color(0xFFF0F6FC),
-            background: const Color(0xFF0D1117),
-            onBackground: const Color(0xFFF0F6FC),
-            surfaceVariant: const Color(0xFF21262D),
+            surfaceContainerHighest: const Color(0xFF21262D),
             outlineVariant: const Color(0xFF30363D),
           ),
           scaffoldBackgroundColor: const Color(0xFF0D1117),
@@ -59,8 +56,8 @@ class LocalStreamApp extends StatelessWidget {
           ),
           navigationBarTheme: NavigationBarThemeData(
             backgroundColor: const Color(0xFF161B22),
-            indicatorColor: const Color(0xFF1F6FEB).withOpacity(0.3),
-            labelTextStyle: MaterialStateProperty.all(
+            indicatorColor: const Color(0xFF1F6FEB).withValues(alpha: 0.3),
+            labelTextStyle: WidgetStateProperty.all(
               const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
             ),
           ),

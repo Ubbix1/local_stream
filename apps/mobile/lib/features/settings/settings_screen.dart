@@ -25,7 +25,7 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.android, color: Colors.greenAccent, size: 20),
+                      const Icon(Icons.android, color: Colors.greenAccent, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         'Android Architecture (API 33 - 36)',
@@ -72,19 +72,19 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   const Divider(),
                   const SizedBox(height: 8),
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('App Version', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      const Text('0.1.0', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('App Version', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text('0.1.0', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Protocol Version', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      const Text('v1 (HTTP /api/v1)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('Protocol Version', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text('v1 (HTTP /api/v1)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],

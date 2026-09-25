@@ -37,9 +37,9 @@ class LibraryScreen extends StatelessWidget {
                   ),
               ],
               onChanged: media.setSearchQuery,
-              elevation: const MaterialStatePropertyAll(1),
+              elevation: const WidgetStatePropertyAll(1),
               backgroundColor:
-                  MaterialStatePropertyAll(colorScheme.surfaceVariant),
+                  WidgetStatePropertyAll(colorScheme.surfaceContainerHighest),
             ),
           ),
         ),
@@ -166,7 +166,7 @@ class LibraryScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.folder_open,
-                size: 64, color: theme.colorScheme.primary.withOpacity(0.5)),
+                size: 64, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
             Text(
               media.searchQuery.isNotEmpty
@@ -182,7 +182,7 @@ class LibraryScreen extends StatelessWidget {
                   ? 'Try a different search term or clear the filter.'
                   : 'Tap "Add Media" below to choose files from Downloads, Documents, Camera, or any other folder.',
               style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodySmall?.color?.withOpacity(0.7)),
+                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7)),
               textAlign: TextAlign.center,
             ),
             if (media.searchQuery.isNotEmpty) ...[
@@ -238,7 +238,7 @@ class LibraryScreen extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         leading: CircleAvatar(
-          backgroundColor: iconColor.withOpacity(0.15),
+          backgroundColor: iconColor.withValues(alpha: 0.15),
           child: Icon(icon, color: iconColor),
         ),
         title: Text(
@@ -254,7 +254,7 @@ class LibraryScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceVariant,
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(

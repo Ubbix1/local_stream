@@ -9,7 +9,6 @@ class ClientsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final server = context.watch<ServerService>();
     final status = server.status;
-    final isRunning = status.state.isRunning;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -119,7 +118,7 @@ class ClientsScreen extends StatelessWidget {
     return Container(
       width: 1,
       height: 40,
-      color: Colors.grey.withOpacity(0.3),
+      color: Colors.grey.withValues(alpha: 0.3),
     );
   }
 

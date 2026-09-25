@@ -16,7 +16,6 @@ class HomeScreen extends StatelessWidget {
     final media = context.watch<MediaService>();
     final status = server.status;
     final isRunning = status.state.isRunning;
-    final isStarting = status.state.isStarting;
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -92,34 +91,27 @@ class HomeScreen extends StatelessWidget {
 
     Color statusColor;
     String statusText;
-    IconData statusIcon;
 
     switch (status.state) {
       case ServerLifecycleState.running:
         statusColor = Colors.greenAccent;
         statusText = 'Server Running';
-        statusIcon = Icons.check_circle;
         break;
       case ServerLifecycleState.starting:
         statusColor = Colors.amberAccent;
         statusText = 'Starting Server...';
-        statusIcon = Icons.hourglass_top;
         break;
       case ServerLifecycleState.stopping:
         statusColor = Colors.orangeAccent;
         statusText = 'Stopping Server...';
-        statusIcon = Icons.hourglass_bottom;
         break;
       case ServerLifecycleState.error:
         statusColor = Colors.redAccent;
         statusText = 'Server Error';
-        statusIcon = Icons.error;
         break;
       case ServerLifecycleState.stopped:
-      default:
         statusColor = Colors.grey;
         statusText = 'Server Stopped';
-        statusIcon = Icons.stop_circle_outlined;
         break;
     }
 
@@ -145,7 +137,7 @@ class HomeScreen extends StatelessWidget {
                         boxShadow: isRunning
                             ? [
                                 BoxShadow(
-                                    color: statusColor.withOpacity(0.5),
+                                    color: statusColor.withValues(alpha: 0.5),
                                     blurRadius: 8,
                                     spreadRadius: 2)
                               ]
@@ -169,7 +161,7 @@ class HomeScreen extends StatelessWidget {
                       style: const TextStyle(fontSize: 12),
                     ),
                     visualDensity: VisualDensity.compact,
-                    backgroundColor: colorScheme.surfaceVariant,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
                   ),
               ],
             ),
@@ -178,9 +170,9 @@ class HomeScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -251,14 +243,14 @@ class HomeScreen extends StatelessWidget {
             Text(
               'Devices on the same Wi-Fi or hotspot can open these in any browser or media player:',
               style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodySmall?.color?.withOpacity(0.7)),
+                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7)),
             ),
             const SizedBox(height: 12),
             if (addresses.isEmpty)
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceVariant,
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
@@ -272,10 +264,10 @@ class HomeScreen extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceVariant,
+color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                        color: colorScheme.outlineVariant.withOpacity(0.5)),
+                        color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -394,7 +386,7 @@ class HomeScreen extends StatelessWidget {
             Text(
               subtitle,
               style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.textTheme.bodySmall?.color?.withOpacity(0.6)),
+                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6)),
             ),
           ],
         ),

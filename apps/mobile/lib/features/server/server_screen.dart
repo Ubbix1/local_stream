@@ -230,8 +230,8 @@ class _ServerScreenState extends State<ServerScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: method == 'GET'
-                      ? Colors.blue.withOpacity(0.2)
-                      : Colors.purple.withOpacity(0.2),
+                      ? Colors.blue.withValues(alpha: 0.2)
+                      : Colors.purple.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
