@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../models/media_item.dart';
 import '../../services/media_service.dart';
 import '../../services/server_service.dart';
+import '../../widgets/liquid_glass_button.dart';
+import '../../widgets/liquid_glass_icon_button.dart';
 
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({super.key});
@@ -95,10 +97,11 @@ class LibraryScreen extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: LiquidGlassIconButton(
+        icon: Icons.add,
+        tooltip: 'Add Media',
+        size: 56,
         onPressed: () => _pickMediaFiles(context, media),
-        icon: const Icon(Icons.video_library_outlined),
-        label: const Text('Add Media'),
       ),
     );
   }
@@ -184,9 +187,14 @@ class LibraryScreen extends StatelessWidget {
             ),
             if (media.searchQuery.isNotEmpty) ...[
               const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => media.setSearchQuery(''),
-                child: const Text('Clear Search'),
+              SizedBox(
+                height: 40,
+                width: 168,
+                child: LiquidGlassButton(
+                  label: 'Clear Search',
+                  onPressed: () => media.setSearchQuery(''),
+                  borderRadius: 10,
+                ),
               ),
             ],
           ],

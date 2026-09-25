@@ -24,6 +24,9 @@ dependencies:
   # Path utilities
   path: ^1.9.0
 
+  # Liquid Glass buttons
+  liquid_glass_widgets: ^1.7.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

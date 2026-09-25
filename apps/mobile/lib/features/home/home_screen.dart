@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../models/server_status.dart';
 import '../../services/media_service.dart';
 import '../../services/server_service.dart';
+import '../../widgets/liquid_glass_button.dart';
+import '../../widgets/liquid_glass_icon_button.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -29,10 +31,12 @@ class HomeScreen extends StatelessWidget {
                 color: colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.stream, color: colorScheme.onPrimaryContainer, size: 20),
+              child: Icon(Icons.stream,
+                  color: colorScheme.onPrimaryContainer, size: 20),
             ),
             const SizedBox(width: 10),
-            const Text('LocalStream', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('LocalStream',
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
         actions: [
@@ -78,7 +82,8 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusCard(BuildContext context, ServerService server, ServerStatus status) {
+  Widget _buildStatusCard(
+      BuildContext context, ServerService server, ServerStatus status) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isRunning = status.state.isRunning;
@@ -138,7 +143,12 @@ class HomeScreen extends StatelessWidget {
                         color: statusColor,
                         shape: BoxShape.circle,
                         boxShadow: isRunning
-                            ? [BoxShadow(color: statusColor.withOpacity(0.5), blurRadius: 8, spreadRadius: 2)]
+                            ? [
+                                BoxShadow(
+                                    color: statusColor.withOpacity(0.5),
+                                    blurRadius: 8,
+                                    spreadRadius: 2)
+                              ]
                             : null,
                       ),
                     ),
@@ -174,12 +184,14 @@ class HomeScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
+                    const Icon(Icons.error_outline,
+                        color: Colors.redAccent, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         status.errorMessage!,
-                        style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                        style: const TextStyle(
+                            color: Colors.redAccent, fontSize: 13),
                       ),
                     ),
                   ],
@@ -190,7 +202,7 @@ class HomeScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               height: 48,
-              child: FilledButton.icon(
+              child: LiquidGlassButton(
                 onPressed: (isStarting || isStopping)
                     ? null
                     : () {
@@ -200,15 +212,9 @@ class HomeScreen extends StatelessWidget {
                           server.startServer();
                         }
                       },
-                style: FilledButton.styleFrom(
-                  backgroundColor: isRunning ? Colors.redAccent.shade700 : colorScheme.primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                icon: Icon(isRunning ? Icons.stop : Icons.play_arrow),
-                label: Text(
-                  isRunning ? 'Stop Server' : 'Start Server',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                borderRadius: 12,
+                icon: isRunning ? Icons.stop : Icons.play_arrow,
+                label: isRunning ? 'Stop Server' : 'Start Server',
               ),
             ),
           ],
@@ -236,14 +242,16 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'Local Network Addresses',
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               'Devices on the same Wi-Fi or hotspot can open these in any browser or media player:',
-              style: theme.textTheme.bodySmall?.copyWith(color: theme.textTheme.bodySmall?.color?.withOpacity(0.7)),
+              style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.textTheme.bodySmall?.color?.withOpacity(0.7)),
             ),
             const SizedBox(height: 12),
             if (addresses.isEmpty)
@@ -253,29 +261,35 @@ class HomeScreen extends StatelessWidget {
                   color: colorScheme.surfaceVariant,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text('Connecting to network... check Wi-Fi or Hotspot.'),
+                child: const Text(
+                    'Connecting to network... check Wi-Fi or Hotspot.'),
               )
             else
               ...addresses.map((ip) {
                 final url = 'http://$ip:$port';
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceVariant,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                    border: Border.all(
+                        color: colorScheme.outlineVariant.withOpacity(0.5)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       SelectableText(
                         url,
-                        style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.w600),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.copy, size: 18),
+                      LiquidGlassIconButton(
+                        icon: Icons.copy,
                         tooltip: 'Copy URL',
+                        size: 34,
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: url));
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -366,17 +380,21 @@ class HomeScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(title, style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w500)),
+                Text(title,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(fontWeight: FontWeight.w500)),
                 Icon(icon, size: 18, color: color),
               ],
             ),
             Text(
               value,
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
               subtitle,
-              style: theme.textTheme.labelSmall?.copyWith(color: theme.textTheme.bodySmall?.color?.withOpacity(0.6)),
+              style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.textTheme.bodySmall?.color?.withOpacity(0.6)),
             ),
           ],
         ),
@@ -399,18 +417,23 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'How to connect & stream',
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 10),
-            _buildStepRow('1', 'Connect your laptop, TV, or other device to the same Wi-Fi or Phone Hotspot.'),
+            _buildStepRow('1',
+                'Connect your laptop, TV, or other device to the same Wi-Fi or Phone Hotspot.'),
             const SizedBox(height: 8),
-            _buildStepRow('2', 'Open any browser and type the URL shown above.'),
+            _buildStepRow(
+                '2', 'Open any browser and type the URL shown above.'),
             const SizedBox(height: 8),
-            _buildStepRow('3', 'Or in VLC / media player: Open Network Stream and paste a file\'s stream link.'),
+            _buildStepRow('3',
+                'Or in VLC / media player: Open Network Stream and paste a file\'s stream link.'),
             const SizedBox(height: 8),
-            _buildStepRow('4', 'Share any video/audio from Files, Telegram, or WhatsApp using Android Share.'),
+            _buildStepRow('4',
+                'Share any video/audio from Files, Telegram, or WhatsApp using Android Share.'),
           ],
         ),
       ),
@@ -423,7 +446,9 @@ class HomeScreen extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 10,
-          child: Text(number, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          child: Text(number,
+              style:
+                  const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
         ),
         const SizedBox(width: 10),
         Expanded(

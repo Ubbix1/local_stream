@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/server_service.dart';
+import '../../widgets/liquid_glass_button.dart';
 
 class ServerScreen extends StatefulWidget {
   const ServerScreen({super.key});
@@ -35,14 +36,16 @@ class _ServerScreenState extends State<ServerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Server Configuration', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Server Configuration',
+            style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Port Configuration Card
           Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -50,11 +53,13 @@ class _ServerScreenState extends State<ServerScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.settings_input_antenna, color: colorScheme.primary, size: 20),
+                      Icon(Icons.settings_input_antenna,
+                          color: colorScheme.primary, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         'HTTP Port Settings',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -81,23 +86,34 @@ class _ServerScreenState extends State<ServerScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      FilledButton(
-                        onPressed: isRunning
-                            ? null
-                            : () {
-                                final port = int.tryParse(_portController.text);
-                                if (port != null && port >= 1024 && port <= 65535) {
-                                  server.setConfiguredPort(port);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Port set to $port')),
-                                  );
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Please enter a valid port between 1024 and 65535')),
-                                  );
-                                }
-                              },
-                        child: const Text('Save'),
+                      SizedBox(
+                        height: 48,
+                        width: 96,
+                        child: LiquidGlassButton(
+                          label: 'Save',
+                          onPressed: isRunning
+                              ? null
+                              : () {
+                                  final port =
+                                      int.tryParse(_portController.text);
+                                  if (port != null &&
+                                      port >= 1024 &&
+                                      port <= 65535) {
+                                    server.setConfiguredPort(port);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text('Port set to $port')),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Please enter a valid port between 1024 and 65535')),
+                                    );
+                                  }
+},
+                        borderRadius: 12,
+                      ),
                       ),
                     ],
                   ),
@@ -110,7 +126,8 @@ class _ServerScreenState extends State<ServerScreen> {
 
           // mDNS / Discovery Card
           Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -122,15 +139,18 @@ class _ServerScreenState extends State<ServerScreen> {
                       const SizedBox(width: 8),
                       Text(
                         'mDNS / NSD Discovery',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
                   _buildDetailRow('Service Name', 'LocalStream'),
                   _buildDetailRow('Service Type', '_http._tcp. (DNS-SD)'),
-                  _buildDetailRow('Status', isRunning ? 'Advertising on LAN' : 'Inactive'),
-                  _buildDetailRow('Fallback', 'Direct IP connection is always supported'),
+                  _buildDetailRow(
+                      'Status', isRunning ? 'Advertising on LAN' : 'Inactive'),
+                  _buildDetailRow(
+                      'Fallback', 'Direct IP connection is always supported'),
                 ],
               ),
             ),
@@ -140,7 +160,8 @@ class _ServerScreenState extends State<ServerScreen> {
 
           // API Endpoints Reference Card
           Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -152,19 +173,27 @@ class _ServerScreenState extends State<ServerScreen> {
                       const SizedBox(width: 8),
                       Text(
                         'HTTP Server Endpoints',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
                   _buildApiRow('GET', '/', 'Web media library landing page'),
-                  _buildApiRow('GET', '/watch/:id', 'Web HTML5 video/audio player'),
-                  _buildApiRow('GET', '/api/v1/info', 'Server metadata & protocol version'),
-                  _buildApiRow('GET', '/api/v1/status', 'Server metrics & clients count'),
-                  _buildApiRow('GET', '/api/v1/files', 'List all media files (JSON)'),
-                  _buildApiRow('GET', '/api/v1/files/:id', 'Get metadata for specific item'),
-                  _buildApiRow('GET', '/api/v1/stream/:id', 'HTTP Range streaming stream'),
-                  _buildApiRow('HEAD', '/api/v1/stream/:id', 'Probe stream headers & length'),
+                  _buildApiRow(
+                      'GET', '/watch/:id', 'Web HTML5 video/audio player'),
+                  _buildApiRow('GET', '/api/v1/info',
+                      'Server metadata & protocol version'),
+                  _buildApiRow('GET', '/api/v1/status',
+                      'Server metrics & clients count'),
+                  _buildApiRow(
+                      'GET', '/api/v1/files', 'List all media files (JSON)'),
+                  _buildApiRow('GET', '/api/v1/files/:id',
+                      'Get metadata for specific item'),
+                  _buildApiRow('GET', '/api/v1/stream/:id',
+                      'HTTP Range streaming stream'),
+                  _buildApiRow('HEAD', '/api/v1/stream/:id',
+                      'Probe stream headers & length'),
                 ],
               ),
             ),
@@ -181,7 +210,9 @@ class _ServerScreenState extends State<ServerScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          Text(value,
+              style:
+                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -198,7 +229,9 @@ class _ServerScreenState extends State<ServerScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: method == 'GET' ? Colors.blue.withOpacity(0.2) : Colors.purple.withOpacity(0.2),
+                  color: method == 'GET'
+                      ? Colors.blue.withOpacity(0.2)
+                      : Colors.purple.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -206,14 +239,19 @@ class _ServerScreenState extends State<ServerScreen> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: method == 'GET' ? Colors.blueAccent : Colors.purpleAccent,
+                    color: method == 'GET'
+                        ? Colors.blueAccent
+                        : Colors.purpleAccent,
                   ),
                 ),
               ),
               const SizedBox(width: 8),
               Text(
                 path,
-                style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 13),
+                style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13),
               ),
             ],
           ),
