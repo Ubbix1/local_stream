@@ -186,6 +186,80 @@ object WebClientHtml {
 
             .card.unavailable .card-foot{opacity:.5}
 
+            /* Folder browsing */
+            .folderbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:2px 0 8px}
+            .folder-path{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+            .folder-path .crumb-sep{opacity:.5}
+            .folder-path .crumb{color:var(--accent);cursor:pointer;background:none;border:none;font:inherit;padding:2px 6px;border-radius:6px}
+            .folder-path .crumb:hover{background:rgba(88,166,255,.14)}
+            .folder-path .crumb-current{color:var(--text);font-weight:600;padding:2px 6px}
+            .folders{display:flex;gap:8px;flex-wrap:wrap;padding:0 0 18px}
+            .folders[hidden]{display:none}
+            .folder-card{
+                display:flex;align-items:center;gap:10px;max-width:240px;text-align:left;
+                padding:10px 14px;border-radius:12px;border:1px solid var(--border);
+                background:var(--surface);cursor:pointer;color:var(--text);
+                transition:border-color .15s var(--ease),transform .15s var(--ease),box-shadow .15s var(--ease);
+            }
+            .folder-card:hover,.folder-card:focus-visible{
+                border-color:var(--accent);transform:translateY(-2px);
+                box-shadow:0 10px 24px rgba(0,0,0,.35);
+            }
+            .folder-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+            .folder-icon{width:34px;height:34px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;color:#d29922;background:rgba(210,153,34,.14)}
+            .folder-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+            .folder-count{font-size:11px;color:var(--muted)}
+
+            /* Card thumbnails */
+            .cover img.thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#000}
+            .cover img.thumb[hidden]{display:none}
+            .cover .dur-badge{
+                position:absolute;left:10px;bottom:10px;font-size:10px;font-weight:700;
+                padding:2px 8px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;
+                font-variant-numeric:tabular-nums;
+            }
+            .card.unavailable .cover .dur-badge{display:none}
+
+            /* Access PIN login */
+            .login{
+                position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;
+                background:rgba(5,8,12,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+                padding:20px;
+            }
+            .login[hidden]{display:none}
+            .login-panel{
+                width:min(100%,380px);background:rgba(22,27,34,.96);border:1px solid var(--border);
+                border-radius:18px;padding:28px;display:flex;flex-direction:column;gap:14px;
+                box-shadow:0 30px 80px rgba(0,0,0,.5);text-align:center;
+            }
+            .login-panel h2{font-size:18px}
+            .login-panel p{font-size:13px;color:var(--muted);line-height:1.5}
+            .login-panel input{
+                width:100%;padding:13px 14px;border-radius:12px;background:var(--surface);
+                border:1px solid var(--border);color:var(--text);font-size:18px;
+                letter-spacing:.35em;text-align:center;outline:none;
+            }
+            .login-panel input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(88,166,255,.18)}
+            .login-err{font-size:12px;color:var(--bad);min-height:16px}
+            .login-hint{font-size:11px;color:var(--muted)}
+
+            /* Player subtitle menu */
+            .controls-wrap{position:relative}
+            .controls{
+                position:relative;z-index:6;
+            }
+            .sub-menu{
+                position:absolute;bottom:calc(100% + 10px);left:14px;display:none;flex-direction:column;gap:2px;
+                background:rgba(13,17,23,.96);border:1px solid var(--border);border-radius:12px;padding:6px;min-width:170px;z-index:60;
+                -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+            }
+            .sub-menu.open{display:flex}
+            .sub-menu button{
+                text-align:left;padding:8px 12px;border-radius:8px;font-size:12px;color:var(--muted);cursor:pointer;
+            }
+            .sub-menu button:hover{background:rgba(255,255,255,.08);color:var(--text)}
+            .sub-menu button.active{color:#0d1117;background:var(--accent)}
+
             /* Skeletons */
             .skel{
                 pointer-events:none;height:100%;
@@ -317,6 +391,9 @@ object WebClientHtml {
                 <symbol id="i-retry" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
                 <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></symbol>
                 <symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></symbol>
+                <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
+                <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+                <symbol id="i-sub" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M7 15h6M7 12h10M13 15h4"/></symbol>
             </svg>
 
             <main class="shell">
@@ -352,6 +429,12 @@ object WebClientHtml {
                     </select>
                 </nav>
 
+                <nav class="folderbar" id="folderBar" hidden aria-label="Current folder">
+                    <button class="glass-btn glass-btn--sm" id="folderUp" aria-label="Go up one folder"><svg class="icon"><use href="#i-back"></use></svg> Up</button>
+                    <div class="folder-path" id="folderPath"></div>
+                </nav>
+                <div class="folders" id="folders" hidden aria-label="Folders"></div>
+
                 <div id="library" class="grid"></div>
                 <div id="empty" class="empty" hidden></div>
 
@@ -381,28 +464,46 @@ object WebClientHtml {
                             </div>
                         </div>
                     </div>
-                    <div class="controls" id="controls">
-                        <button class="glass-btn glass-btn--icon" id="cPlay" aria-label="Play">
-                            <svg class="icon" id="cPlayIcon"><use href="#i-play"></use></svg>
-                        </button>
-                        <div class="seek">
-                            <div class="seekbar" id="seekbar">
-                                <div class="track"></div>
-                                <div class="buffer" id="cBuffer"></div>
-                                <input type="range" id="cSeek" min="0" max="1000" step="1" value="0" aria-label="Seek">
-                            </div>
-                            <div class="time" id="cTime">0:00 / 0:00</div>
-                        </div>
-                        <div class="vol-wrap">
-                            <button class="glass-btn glass-btn--icon" id="cMute" aria-label="Mute">
-                                <svg class="icon" id="cMuteIcon"><use href="#i-vol"></use></svg>
+                    <div class="controls-wrap" id="controlswrap">
+                        <div class="controls" id="controls">
+                            <button class="glass-btn glass-btn--icon" id="cPlay" aria-label="Play">
+                                <svg class="icon" id="cPlayIcon"><use href="#i-play"></use></svg>
                             </button>
-                            <input type="range" class="vol" id="cVol" min="0" max="1" step="0.05" value="1" aria-label="Volume">
+                            <div class="seek">
+                                <div class="seekbar" id="seekbar">
+                                    <div class="track"></div>
+                                    <div class="buffer" id="cBuffer"></div>
+                                    <input type="range" id="cSeek" min="0" max="1000" step="1" value="0" aria-label="Seek">
+                                </div>
+                                <div class="time" id="cTime">0:00 / 0:00</div>
+                            </div>
+                            <div class="vol-wrap">
+                                <button class="glass-btn glass-btn--icon" id="cMute" aria-label="Mute">
+                                    <svg class="icon" id="cMuteIcon"><use href="#i-vol"></use></svg>
+                                </button>
+                                <input type="range" class="vol" id="cVol" min="0" max="1" step="0.05" value="1" aria-label="Volume">
+                            </div>
+                            <button class="glass-btn glass-btn--icon" id="cSub" aria-label="Subtitles" hidden>
+                                <svg class="icon" id="cSubIcon"><use href="#i-sub"></use></svg>
+                            </button>
+                            <button class="glass-btn glass-btn--icon" id="cFull" aria-label="Fullscreen">
+                                <svg class="icon" id="cFullIcon"><use href="#i-full"></use></svg>
+                            </button>
                         </div>
-                        <button class="glass-btn glass-btn--icon" id="cFull" aria-label="Fullscreen">
-                            <svg class="icon" id="cFullIcon"><use href="#i-full"></use></svg>
-                        </button>
+                        <div class="sub-menu" id="subMenu" role="menu" aria-label="Subtitles"></div>
                     </div>
+                </div>
+            </div>
+
+            <div class="login" id="login" hidden>
+                <div class="login-panel">
+                    <div class="brand-mark" style="margin:0 auto"><svg class="icon icon--big"><use href="#i-lock"></use></svg></div>
+                    <h2>Access PIN required</h2>
+                    <p>The server on your phone requires a PIN. Enter it to browse the media library.</p>
+                    <input type="password" id="loginPin" inputmode="numeric" maxlength="6" autocomplete="off" aria-label="Enter access PIN" placeholder="&#9679;&#9679;&#9679;&#9679;">
+                    <button class="glass-btn glass-btn--accent glass-btn--lg" id="loginBtn">Unlock</button>
+                    <div class="login-err" id="loginErr"></div>
+                    <span class="login-hint">Set or clear the PIN in the LocalStream app under Settings.</span>
                 </div>
             </div>
 
@@ -414,6 +515,7 @@ object WebClientHtml {
             'use strict';
             (function(){
                 var items = [];
+                var folders = [];
                 var tab = 'all';
                 var query = '';
                 var sortKey = 'name';
@@ -424,6 +526,10 @@ object WebClientHtml {
                 var controlsTimer = null;
                 var lastTouch = 0;
                 var lastTapX = 0;
+                var currentFolder = null;
+                var folderStack = [];
+                var loginShown = false;
+                var eventsSrc = null;
 
                 var $ = function(id){ return document.getElementById(id); };
                 var library = $('library');
@@ -487,6 +593,28 @@ object WebClientHtml {
                     return parts.length === 2 && parts[1] ? parts[1].toUpperCase() : mime;
                 }
 
+                function fmtClock(ms){
+                    var total = Math.floor((Number(ms) || 0) / 1000);
+                    if (total <= 0) return '';
+                    var h = Math.floor(total / 3600);
+                    var m = Math.floor((total % 3600) / 60);
+                    var s = total % 60;
+                    var mm = (h > 0 && m < 10) ? '0' + m : String(m);
+                    var ss = s < 10 ? '0' + s : String(s);
+                    return h > 0 ? h + ':' + mm + ':' + ss : m + ':' + ss;
+                }
+
+                function folderCardHtml(folder){
+                    var id = encodeURIComponent(folder.id);
+                    var count = (folder.itemCount > 0) ? (folder.itemCount + (folder.itemCount === 1 ? ' item' : ' items')) : 'Folder';
+                    return '<button class="folder-card" data-folder="' + id + '" aria-label="Open folder ' + escapeHtml(folder.name) + '">'
+                        + '<span class="folder-icon"><svg class="icon"><use href="#i-folder"></use></svg></span>'
+                        + '<span style="min-width:0;display:flex;flex-direction:column">'
+                        + '<span class="folder-name">' + escapeHtml(folder.name) + '</span>'
+                        + '<span class="folder-count">' + count + '</span></span>'
+                        + '</button>';
+                }
+
                 function cardHtml(item){
                     var id = encodeURIComponent(item.id);
                     var stream = '/api/v1/stream/' + id;
@@ -501,6 +629,15 @@ object WebClientHtml {
                     var safeTitle = escapeHtml(title);
                     var unavailable = item.available === false;
                     var unav = unavailable ? '<span class="unav-tag">Unavailable</span>' : '';
+                    var thumb = '';
+                    if (item.thumbUrl && !unavailable){
+                        thumb = '<img class="thumb" loading="lazy" decoding="async" src="' + item.thumbUrl + '" alt="" onerror="this.hidden=true">';
+                    }
+                    var dur = '';
+                    var dms = Number(item.durationMs);
+                    if (isFinite(dms) && dms > 0){
+                        dur = '<span class="dur-badge">' + fmtClock(dms) + '</span>';
+                    }
                     var foot = unavailable
                         ? '<div class="card-foot"><span class="glass-btn glass-btn--sm" disabled>Unavailable</span></div>'
                         : '<div class="card-foot">'
@@ -508,7 +645,8 @@ object WebClientHtml {
                             + '<a class="glass-btn glass-btn--sm glass-btn--icon" href="' + stream + '" download aria-label="Download ' + safeTitle + '"><svg class="icon"><use href="#i-download"></use></svg></a>'
                           + '</div>';
                     return '<article class="card' + (unavailable ? ' unavailable' : '') + '" tabindex="0" role="button" aria-label="' + safeTitle + ' — ' + typeLabel(item.type) + (size ? ', ' + size : '') + '" data-id="' + id + '">'
-                        + '<div class="cover cover--' + cls + '"><span class="cover-tag">' + typeLabel(item.type) + '</span>' + unav
+                        + '<div class="cover cover--' + cls + '">' + thumb
+                        + '<span class="cover-tag">' + typeLabel(item.type) + '</span>' + unav + dur
                         + '<svg class="icon icon--big"><use href="' + icon + '"></use></svg></div>'
                         + '<div class="card-body"><h3 class="card-title">' + safeTitle + '</h3><p class="card-meta">' + meta + '</p></div>'
                         + foot
@@ -521,7 +659,38 @@ object WebClientHtml {
                     return u;
                 }
 
+                function renderChrome(){
+                    var fbar = $('folderBar');
+                    var fpath = $('folderPath');
+                    var fbox = $('folders');
+
+                    fbox.innerHTML = folders.map(folderCardHtml).join('');
+                    fbox.hidden = folders.length === 0;
+
+                    if (currentFolder){
+                        fbar.hidden = false;
+                        var crumbs = [];
+                        crumbs.push('<button class="crumb" data-crumb="root">Root</button>');
+                        var segs = folderStack.slice();
+                        segs.push(currentFolder);
+                        for (var k = 0; k < segs.length; k++){
+                            if (k < segs.length - 1){
+                                crumbs.push('<span class="crumb-sep">/</span>');
+                                crumbs.push('<span class="crumb">' + escapeHtml(segs[k].name) + '</span>');
+                            } else {
+                                crumbs.push('<span class="crumb-sep">/</span>');
+                                crumbs.push('<span class="crumb-current">' + escapeHtml(segs[k].name) + '</span>');
+                            }
+                        }
+                        fpath.innerHTML = crumbs.join('');
+                    } else {
+                        fbar.hidden = true;
+                        fpath.innerHTML = '';
+                    }
+                }
+
                 function render(){
+                    renderChrome();
                     var visible = items.slice();
                     if (tab !== 'all') visible = visible.filter(function(it){ return it.type === tab; });
                     if (query) {
@@ -540,17 +709,23 @@ object WebClientHtml {
                     });
                     else visible.sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||''), undefined, {numeric:true, sensitivity:'base'}); });
 
-                    if (items.length === 0){
+                    if (items.length === 0 && folders.length === 0){
                         library.innerHTML = '';
                         emptyBox.hidden = false;
-                        emptyBox.innerHTML = '<h2>No media yet</h2><p>Add folders or share media from the LocalStream app on your phone, then refresh.</p>'
-                            + '<button class="glass-btn glass-btn--accent" id="emptyRefresh"><svg class="icon"><use href="#i-refresh"></use></svg> Refresh library</button>';
-                        $('emptyRefresh').addEventListener('click', function(){ loadLibrary(false); });
+                        if (currentFolder){
+                            emptyBox.innerHTML = '<h2>This folder is empty</h2><p>Nothing here yet. Go up to browse more of the library.</p>'
+                                + '<button class="glass-btn glass-btn--accent" id="emptyUp"><svg class="icon"><use href="#i-back"></use></svg> Up one level</button>';
+                            $('emptyUp').addEventListener('click', function(){ goUp(); });
+                        } else {
+                            emptyBox.innerHTML = '<h2>No media yet</h2><p>Add folders or share media from the LocalStream app on your phone, then refresh.</p>'
+                                + '<button class="glass-btn glass-btn--accent" id="emptyRefresh"><svg class="icon"><use href="#i-refresh"></use></svg> Refresh library</button>';
+                            $('emptyRefresh').addEventListener('click', function(){ loadLibrary(false); });
+                        }
                         count.textContent = '0 items';
                         return;
                     }
                     emptyBox.hidden = true;
-                    if (visible.length === 0){
+                    if (visible.length === 0 && folders.length === 0){
                         library.innerHTML = '';
                         count.textContent = '0 of ' + items.length;
                         emptyBox.hidden = false;
@@ -580,25 +755,115 @@ object WebClientHtml {
                 }
 
                 function fetchJSON(url){
-                    return fetch(url, { cache: 'no-store' }).then(function(res){
+                    return fetch(url, { cache: 'no-store', credentials: 'same-origin' }).then(function(res){
+                        if (res.status === 401){ showLogin(); throw new Error('auth'); }
                         if (!res.ok) throw new Error('HTTP ' + res.status);
                         return res.json();
                     });
                 }
 
-                function loadLibrary(silent){
+                function showLogin(){
+                    if (loginShown) return;
+                    loginShown = true;
+                    $('login').hidden = false;
+                    setTimeout(function(){
+                        var input = $('loginPin');
+                        if (input && document.activeElement !== input) input.focus();
+                    }, 60);
+                }
+                function hideLogin(){
+                    loginShown = false;
+                    $('login').hidden = true;
+                    $('loginErr').textContent = '';
+                    $('loginPin').value = '';
+                }
+                function doLogin(){
+                    var pin = $('loginPin').value.trim();
+                    if (!pin) return;
+                    $('loginBtn').disabled = true;
+                    $('loginErr').textContent = '';
+                    fetch('/api/v1/auth/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ pin: pin })
+                    }).then(function(res){
+                        if (res.status === 200){
+                            hideLogin();
+                            loadLibrary(false);
+                            checkConn();
+                        } else {
+                            return res.json().catch(function(){ return {}; }).then(function(data){
+                                throw new Error((data && data.error && data.error.message) || 'Incorrect PIN');
+                            });
+                        }
+                    }).catch(function(err){
+                        $('loginErr').textContent = (err && err.message && err.message !== 'auth')
+                            ? err.message
+                            : 'Could not verify the PIN. Try again.';
+                    }).then(function(){
+                        $('loginBtn').disabled = false;
+                    });
+                }
+
+                function openFolder(folderId, folderName){
+                    if (!folderId) return;
+                    if (currentFolder) folderStack.push(currentFolder);
+                    currentFolder = { id: folderId, name: folderName || 'Folder' };
+                    resetTab('all');
+                    loadLibrary(false, folderId);
+                }
+                function goUp(){
+                    if (!currentFolder) return;
+                    var parent = folderStack.pop() || null;
+                    currentFolder = parent;
+                    resetTab('all');
+                    loadLibrary(false, parent ? parent.id : null);
+                }
+                function goRoot(){
+                    folderStack = [];
+                    currentFolder = null;
+                    resetTab('all');
+                    loadLibrary(false, null);
+                }
+                function resetTab(which){
+                    tab = which;
+                    var tabs = document.querySelectorAll('#tabs .tab');
+                    for (var i = 0; i < tabs.length; i++){
+                        tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === which);
+                    }
+                }
+
+                function loadLibrary(silent, folderId){
                     if (!silent) setGridLoading();
-                    fetchJSON('/api/v1/files').then(function(data){
-                        items = (data && Array.isArray(data.items)) ? data.items : [];
-                        render();
-                        if (watchId){ openWatch(watchId); }
-                    }).catch(function(){
+                    var pending = folderId || (currentFolder ? currentFolder.id : null);
+                    var url = '/api/v1/files';
+                    if (pending) url += '?parent=' + encodeURIComponent(pending);
+                    fetch(url, { cache: 'no-store', credentials: 'same-origin' }).then(function(res){
+                        if (res.status === 401){ showLogin(); throw new Error('auth'); }
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        return res.json();
+                    }).then(function(data){
+                        if (pending){
+                            items = Array.isArray(data.items) ? data.items : [];
+                            folders = Array.isArray(data.folders) ? data.folders : [];
+                        } else {
+                            items = Array.isArray(data.items) ? data.items : [];
+                            return fetchJSON('/api/v1/folders').then(function(fd){
+                                folders = (fd && Array.isArray(fd.folders)) ? fd.folders : [];
+                            }).catch(function(){ folders = []; });
+                        }
+                    }).catch(function(err){
+                        if (err && err.message === 'auth') return;
                         if (!silent){
                             emptyBox.hidden = false;
                             emptyBox.innerHTML = '<h2>Unable to load the media library</h2><p>Check that the LocalStream server is running, then retry.</p>'
                                 + '<button class="glass-btn glass-btn--accent" id="emptyRetry"><svg class="icon"><use href="#i-retry"></use></svg> Retry</button>';
                             $('emptyRetry').addEventListener('click', function(){ loadLibrary(false); });
                         }
+                    }).then(function(){
+                        render();
+                        if (watchId && !pending){ openWatch(watchId); }
                     });
                 }
 
@@ -618,6 +883,7 @@ object WebClientHtml {
 
                 function checkConn(){
                     fetch('/api/v1/status', { cache: 'no-store' }).then(function(res){
+                        if (res.status === 401){ showLogin(); throw new Error('auth'); }
                         if (!res.ok) throw new Error('bad status');
                         return res.json();
                     }).then(function(){
@@ -665,6 +931,19 @@ object WebClientHtml {
                     bindMediaEvents();
                     resetControlsUI();
 
+                    if (item.subtitles && item.subtitles.length){
+                        populateSubMenu(item.subtitles);
+                        $('cSub').hidden = false;
+                        $('subMenu').classList.remove('open');
+                        setSubtitle(0);
+                    } else {
+                        $('cSub').hidden = true;
+                        $('subMenu').classList.remove('open');
+                    }
+                    if (Number(item.durationMs) > 0){
+                        $('cTime').textContent = '0:00 / ' + fmtClock(item.durationMs);
+                    }
+
                     player.hidden = false;
                     playerOpen = true;
                     document.body.classList.add('no-scroll');
@@ -699,6 +978,37 @@ object WebClientHtml {
                     document.title = 'LocalStream Media';
                     clearTimeout(controlsTimer);
                     $('pLink').removeAttribute('href');
+                    $('subMenu').classList.remove('open');
+                }
+
+                function populateSubMenu(tracks){
+                    var menu = $('subMenu');
+                    menu.innerHTML = '';
+                    function add(label, idx){
+                        var b = document.createElement('button');
+                        b.textContent = label;
+                        b.type = 'button';
+                        b.setAttribute('role', 'menuitem');
+                        b.addEventListener('click', function(){
+                            setSubtitle(idx);
+                            menu.classList.remove('open');
+                        });
+                        menu.appendChild(b);
+                    }
+                    add('Off', -1);
+                    for (var i = 0; i < tracks.length; i++){
+                        add(tracks[i].name || ('Subtitle ' + (i + 1)), i);
+                    }
+                }
+                function setSubtitle(idx){
+                    if (!mediaEl || !mediaEl.textTracks) return;
+                    for (var i = 0; i < mediaEl.textTracks.length; i++){
+                        mediaEl.textTracks[i].mode = (idx === i) ? 'showing' : 'hidden';
+                    }
+                    var btns = $('subMenu').querySelectorAll('button');
+                    for (var j = 0; j < btns.length; j++){
+                        btns[j].classList.toggle('active', (j - 1) === idx);
+                    }
                 }
 
                 function resetControlsUI(){
@@ -779,8 +1089,23 @@ object WebClientHtml {
                             $('perrorText').textContent = 'Still unable to play this media in this browser.';
                             $('perrorCode').textContent = err ? String(err.name) : '';
                             $('perror').hidden = false;
+                            probeTranscode(mediaMeta);
                         }
                     });
+                }
+
+                function probeTranscode(item){
+                    if (!item || !item.id) return;
+                    fetch('/api/v1/transcode/' + encodeURIComponent(item.id), {
+                        cache: 'no-store',
+                        credentials: 'same-origin'
+                    }).then(function(res){
+                        if (res.status === 501){
+                            var note = 'Server-side transcoding is not configured on this server.';
+                            var cur = $('perrorCode').textContent || '';
+                            $('perrorCode').textContent = cur ? (cur + ' \u00b7 ' + note) : note;
+                        }
+                    }).catch(function(){});
                 }
 
                 function togglePlay(){
@@ -913,10 +1238,16 @@ object WebClientHtml {
                     $('pRetry').addEventListener('click', function(){
                         retryPlayback();
                     });
+                    $('cSub').addEventListener('click', function(){
+                        var menu = $('subMenu');
+                        if (menu.classList.contains('open')) menu.classList.remove('open');
+                        else menu.classList.add('open');
+                    });
                     document.addEventListener('fullscreenchange', onFullscreenChange);
                     document.addEventListener('webkitfullscreenchange', onFullscreenChange);
 
                     stage.addEventListener('click', function(e){
+                        $('subMenu').classList.remove('open');
                         if (e.target.closest && e.target.closest('button, input, a')) return;
                         showControls();
                     });
@@ -998,6 +1329,41 @@ object WebClientHtml {
                     try { watchId = decodeURIComponent(watchId); } catch(e){}
                 }
 
+                function connectEvents(){
+                    if (!window.EventSource || eventsSrc) return;
+                    try {
+                        eventsSrc = new EventSource('/api/v1/events');
+                        eventsSrc.addEventListener('library', function(){
+                            loadLibrary(true);
+                        });
+                        eventsSrc.addEventListener('import', function(ev){
+                            try {
+                                var d = JSON.parse(ev.data);
+                                var nameShown = (d && d.name) ? d.name : '';
+                                if (d && d.done){
+                                    showToast('Import finished: ' + nameShown);
+                                } else if (d && d.error){
+                                    showToast('Import failed: ' + nameShown);
+                                } else {
+                                    var total = Number(d && d.totalBytes) || 0;
+                                    var bytes = Number(d && d.bytes) || 0;
+                                    var pct = total > 0 ? Math.round(bytes / total * 100) + '%' : formatBytes(bytes);
+                                    showToast('Importing ' + nameShown + ' \u00b7 ' + pct);
+                                }
+                            } catch(e){}
+                        });
+                        eventsSrc.onopen = function(){
+                            if (connState === 'offline'){
+                                wasOffline = true;
+                                loadLibrary(true);
+                            }
+                        };
+                        eventsSrc.onerror = function(){
+                            // EventSource auto-reconnects; the poller drives the connection pill.
+                        };
+                    } catch(e){}
+                }
+
                 function init(){
                     var tabs = document.querySelectorAll('#tabs .tab');
                     for (var i = 0; i < tabs.length; i++){
@@ -1015,7 +1381,28 @@ object WebClientHtml {
                     sort.addEventListener('change', function(){ sortKey = sort.value; render(); });
                     $('refresh').addEventListener('click', function(){ loadLibrary(false); });
                     window.addEventListener('online', function(){ loadLibrary(true); });
+
+                    $('folderUp').addEventListener('click', goUp);
+                    $('folderPath').addEventListener('click', function(e){
+                        var crumb = e.target.closest ? e.target.closest('.crumb') : null;
+                        if (crumb && crumb.getAttribute('data-crumb') === 'root') goRoot();
+                    });
+                    $('folders').addEventListener('click', function(e){
+                        var fc = e.target.closest ? e.target.closest('.folder-card') : null;
+                        if (!fc) return;
+                        var fnameEl = fc.querySelector('.folder-name');
+                        openFolder(fc.getAttribute('data-folder'), fnameEl ? fnameEl.textContent : 'Folder');
+                    });
+                    $('loginBtn').addEventListener('click', doLogin);
+                    $('loginPin').addEventListener('keydown', function(e){
+                        if (e.key === 'Enter'){
+                            doLogin();
+                            e.preventDefault();
+                        }
+                    });
+
                     wirePlayer();
+                    connectEvents();
                     loadLibrary(false);
                     setConn('checking');
                     checkConn();
