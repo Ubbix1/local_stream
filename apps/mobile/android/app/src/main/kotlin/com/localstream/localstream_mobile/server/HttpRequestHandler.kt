@@ -97,8 +97,7 @@ class HttpRequestHandler(
                 }
 
                 method == "GET" && (path == "/" || path == "/index.html") -> {
-                    val sources = storageManager.getAllSources()
-                    val html = ApiResponseBuilder.buildWebIndexHtml(sources)
+                    val html = ApiResponseBuilder.buildWebIndexHtml()
                     sendHtmlResponse(200, "OK", html)
                 }
 
