@@ -1,0 +1,60 @@
+# LocalStream release automation.
+#
+# Signing key comes from android/key.properties (local) or the CI secrets:
+#   LS_KEYSTORE_BASE64, LS_STORE_PASSWORD, LS_KEY_ALIAS, LS_KEY_PASSWORD
+# Keystore: scripts/generate_release_keystore.{ps1,sh}
+#
+# Play upload credentials: service-account.json next to this file (gitignored)
+# or GOOGLE_APPLICATION_CREDENTIALS in the environment.
+#
+# Usage:
+#   fastlane android internal   # build signed AAB/APK and upload to internal track
+#   fastlane android build      # build only (no upload)
+#
+# The keystore listed in key.properties must be a JKS/PKCS12 FILE, and the
+# signing config must be present at configuration time. Because the app
+# build.gradle.kts reads environment variables directly, CI secrets need no
+# extra plumbing beyond being set on the workflow.
+
+default_platform(:android)
+
+require "base64"
+require "fileutils"
+
+platform :android do
+  desc "Build a signed release AAB + APK (no upload)"
+  lane :build do
+    unzip_key_store_from_env
+    gradle(
+      task: "bundleRelease assembleRelease",
+      properties: {
+        "android.injected.signing.store.file" => ENV["LS_KEYSTORE_PATH"] || ENV["KEYSTORE_PATH"]
+      }.compact
+    )
+  end
+
+  desc "Build signed release artifacts and upload the AAB to Play internal track"
+  lane :internal do
+    unzip_key_store_from_env
+    gradle(task: "bundleRelease")
+    upload_to_play_store(
+      track: "internal",
+      release_status: "draft",
+      skip_upload_screenshots: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_apk: false
+    )
+  end
+
+  desc "Decode LS_KEYSTORE_BASE64 into a local keystore if set"
+  private_lane :unzip_key_store_from_env do
+    if ENV["LS_KEYSTORE_BASE64"] && ENV["LS_KEYSTORE_BASE64"] != ""
+      keystore_path = File.join(Dir.pwd, "android", "release-keystore.jks")
+      FileUtils.mkdir_p(File.join(Dir.pwd, "android"))
+      File.binwrite(keystore_path, Base64.decode64(ENV["LS_KEYSTORE_BASE64"]))
+      ENV["LS_KEYSTORE_PATH"] = keystore_path
+      UI.message("Decoded LS_KEYSTORE_BASE64 to #{keystore_path}")
+    end
+  end
+end

@@ -1,9 +1,60 @@
+import java.util.Base64
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// ── Release signing ──────────────────────────────────────────────────────
+// Sources of truth, in priority order:
+//   1. Environment variables (CI): LS_KEYSTORE_BASE64 | LS_KEYSTORE_PATH,
+//      LS_STORE_PASSWORD, LS_KEY_ALIAS, LS_KEY_PASSWORD
+//   2. android/key.properties (local): storeFile, storePassword,
+//      keyAlias, keyPassword
+// When no credentials are configured, release builds fall back to the debug
+// key so development APKs keep building everywhere.
+val keyProperties = Properties()
+val keyPropertiesFile = rootProject.file("key.properties")
+if (keyPropertiesFile.exists()) {
+    keyPropertiesFile.inputStream().use { keyProperties.load(it) }
+}
+
+fun local(props: Properties, name: String, env: String): String? {
+    val fromEnv = System.getenv(env)
+    if (!fromEnv.isNullOrBlank()) return fromEnv
+    return props.getProperty(name)
+}
+
+val envStoreB64 = System.getenv("LS_KEYSTORE_BASE64")
+val envStorePath = System.getenv("LS_KEYSTORE_PATH")
+
+val releaseKeystoreFile: File? = when {
+    !envStoreB64.isNullOrBlank() -> {
+        val decoded = Base64.getDecoder().decode(envStoreB64)
+        val target = rootProject.file("android/release-keystore.jks")
+        target.parentFile?.mkdirs()
+        target.writeBytes(decoded)
+        target
+    }
+
+    !envStorePath.isNullOrBlank() && File(envStorePath).exists() -> File(envStorePath)
+
+    keyProperties.getProperty("storeFile") != null -> rootProject.file(keyProperties.getProperty("storeFile").trim())
+
+    else -> null
+}
+
+val releaseStorePassword = local(keyProperties, "storePassword", "LS_STORE_PASSWORD")
+val releaseKeyAlias = local(keyProperties, "keyAlias", "LS_KEY_ALIAS")
+val releaseKeyPassword = local(keyProperties, "keyPassword", "LS_KEY_PASSWORD")
+
+val releaseSigningAvailable = releaseKeystoreFile != null &&
+    releaseStorePassword != null &&
+    releaseKeyAlias != null &&
+    releaseKeyPassword != null
 
 android {
     namespace = "com.localstream.localstream_mobile"
@@ -24,6 +75,17 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    signingConfigs {
+        if (releaseSigningAvailable) {
+            create("release") {
+                storeFile = releaseKeystoreFile
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.localstream.localstream_mobile"
         minSdk = 33   // Android 13 minimum
@@ -36,8 +98,12 @@ android {
 
     buildTypes {
         release {
-            // Signing with the debug keys for now.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (releaseSigningAvailable) {
+                signingConfigs.getByName("release")
+            } else {
+                // Fall back to debug keys when no release keystore is configured.
+                signingConfigs.getByName("debug")
+            }
             isMinifyEnabled = false
             isShrinkResources = false
         }
@@ -69,4 +135,3 @@ dependencies {
 flutter {
     source = "../.."
 }
-

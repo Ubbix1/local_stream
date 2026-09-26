@@ -13,6 +13,11 @@ server/web/.env
 .env.local
 .env.*
 !.env.example
+**/key.properties
+*.jks
+*.keystore
+*.jks.tmp
+**/service-account.json
 
 # ── build / generated output ──────────────────────
 **/build/

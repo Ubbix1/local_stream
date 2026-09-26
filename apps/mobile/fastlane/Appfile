@@ -1,0 +1,5 @@
+package_name("com.localstream.localstream_mobile")
+
+# Service account JSON key for Play Console uploads is expected at:
+#   json_key_file("service-account.json") — or set GOOGLE_APPLICATION_CREDENTIALS
+# in the environment. Never commit it.

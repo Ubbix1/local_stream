@@ -1,0 +1,10 @@
+# Copy this file to key.properties and fill in the real values to sign
+# release builds locally. Never commit the real key.properties or keystore.
+# On CI, the same values are injected via environment variables instead
+# (LS_KEYSTORE_BASE64, LS_STORE_PASSWORD, LS_KEY_ALIAS, LS_KEY_PASSWORD).
+
+# Path to the release keystore (JKS or PKCS12), relative to the repo root.
+storeFile=android/release-keystore.jks
+storePassword=CHANGE_ME
+keyAlias=localstream
+keyPassword=CHANGE_ME
