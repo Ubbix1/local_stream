@@ -316,6 +316,7 @@ object WebClientHtml {
                 <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></symbol>
                 <symbol id="i-retry" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
                 <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></symbol>
+                <symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></symbol>
             </svg>
 
             <main class="shell">
@@ -362,7 +363,7 @@ object WebClientHtml {
                     <div class="player-top">
                         <div class="ptitle" id="ptitle"></div>
                         <div class="prow">
-                            <button class="glass-btn glass-btn--icon" id="pLink" aria-label="Open stream in a new tab"><svg class="icon"><use href="#i-full"></use></svg></button>
+                            <button class="glass-btn glass-btn--icon" id="pLink" aria-label="Open stream in a new window"><svg class="icon"><use href="#i-external"></use></svg></button>
                             <button class="glass-btn glass-btn--icon" id="pClose" aria-label="Close player"><svg class="icon"><use href="#i-x"></use></svg></button>
                         </div>
                     </div>
@@ -376,6 +377,7 @@ object WebClientHtml {
                             <p><span id="perrorText"></span><span class="err-code" id="perrorCode"></span></p>
                             <div class="prow">
                                 <button class="glass-btn glass-btn--sm glass-btn--accent" id="pRetry"><svg class="icon"><use href="#i-retry"></use></svg> Retry</button>
+                                <a class="glass-btn glass-btn--sm" id="pDownload" href="#" download><svg class="icon"><use href="#i-download"></use></svg> Download</a>
                             </div>
                         </div>
                     </div>
@@ -440,6 +442,7 @@ object WebClientHtml {
                 var mediaEl = null;
                 var mediaMeta = null;
                 var mediaType = 'video';
+                var demuxRetries = 0;
 
                 function escapeHtml(text){
                     return String(text)
@@ -642,17 +645,20 @@ object WebClientHtml {
                 function openPlayer(item){
                     if (playerOpen) closePlayer();
                     mediaMeta = item;
+                    demuxRetries = 0;
                     var id = encodeURIComponent(item.id);
                     mediaType = (item.type === 'video' || item.type === 'audio') ? item.type : 'video';
                     document.title = (item.name || 'Media') + ' — LocalStream';
                     $('ptitle').textContent = item.name || 'Media';
                     $('pLink').setAttribute('href', '/watch/' + id);
+                    $('pDownload').setAttribute('href', '/api/v1/stream/' + id);
 
                     var old = stage.querySelector('video, audio');
                     if (old) old.remove();
                     mediaEl = document.createElement(mediaType);
                     mediaEl.preload = 'metadata';
                     if (mediaType === 'video') mediaEl.playsInline = true;
+                    if (item.mimeType) mediaEl.setAttribute('type', item.mimeType);
                     mediaEl.src = '/api/v1/stream/' + id;
                     stage.insertBefore(mediaEl, cover);
 
@@ -736,8 +742,11 @@ object WebClientHtml {
                     cover.hidden = true;
                     var code = mediaEl && mediaEl.error ? mediaEl.error.code : 0;
                     var detail = mediaEl && mediaEl.error && mediaEl.error.message ? mediaEl.error.message : '';
+                    var isDemux = /DEMUXER|FFmpegDemuxer|PIPELINE|CODEC/i.test(detail);
                     var msg;
-                    if (code === 4){
+                    if (isDemux){
+                        msg = 'This browser could not open or decode this file. Its container or audio/video codec may not be supported here. Try another browser (e.g. Chrome, Edge, Firefox), or download the file and open it in a local player like VLC.';
+                    } else if (code === 4){
                         msg = 'Unable to play this media in your browser. The stream may use a video or audio codec that this browser does not support.';
                     } else if (code === 2){
                         msg = 'The network connection was interrupted.';
@@ -747,6 +756,31 @@ object WebClientHtml {
                     $('perrorText').textContent = msg;
                     $('perrorCode').textContent = detail ? detail : (code ? 'Error ' + code : '');
                     $('perror').hidden = false;
+                    if (isDemux && demuxRetries < 1){
+                        demuxRetries++;
+                        setTimeout(retryPlayback, 600);
+                    }
+                }
+
+                function retryPlayback(){
+                    if (!mediaEl) return;
+                    $('perror').hidden = true;
+                    cover.hidden = true;
+                    spinner.hidden = false;
+                    var src = mediaEl.getAttribute('src');
+                    var mime = mediaEl.getAttribute('type');
+                    mediaEl.removeAttribute('src');
+                    mediaEl.load();
+                    mediaEl.setAttribute('src', src);
+                    if (mime) mediaEl.setAttribute('type', mime);
+                    mediaEl.play().catch(function(err){
+                        spinner.hidden = true;
+                        if (err && err.name !== 'AbortError'){
+                            $('perrorText').textContent = 'Still unable to play this media in this browser.';
+                            $('perrorCode').textContent = err ? String(err.name) : '';
+                            $('perror').hidden = false;
+                        }
+                    });
                 }
 
                 function togglePlay(){
@@ -877,9 +911,7 @@ object WebClientHtml {
                     });
                     $('cFull').addEventListener('click', toggleFullscreen);
                     $('pRetry').addEventListener('click', function(){
-                        $('perror').hidden = true;
-                        cover.hidden = false;
-                        showControls();
+                        retryPlayback();
                     });
                     document.addEventListener('fullscreenchange', onFullscreenChange);
                     document.addEventListener('webkitfullscreenchange', onFullscreenChange);
