@@ -1,5 +1,6 @@
 package com.localstream.localstream_mobile.server
 
+import com.localstream.localstream_mobile.storage.MediaMetadataCache
 import com.localstream.localstream_mobile.storage.StorageManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +17,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 class HttpMediaServer(
     private val storageManager: StorageManager,
     private val stateHolder: ServerStateHolder,
+    private val serverEvents: ServerEvents,
+    private val accessControl: AccessControl,
+    private val metadataCache: MediaMetadataCache,
     private val maxConnections: Int = 32
 ) {
     private val isRunning = AtomicBoolean(false)
@@ -76,7 +80,10 @@ class HttpMediaServer(
                                 socket = clientSocket,
                                 storageManager = storageManager,
                                 stateHolder = stateHolder,
-                                port = boundPort
+                                port = boundPort,
+                                serverEvents = serverEvents,
+                                accessControl = accessControl,
+                                metadataCache = metadataCache
                             )
                             handler.handle()
                         } finally {

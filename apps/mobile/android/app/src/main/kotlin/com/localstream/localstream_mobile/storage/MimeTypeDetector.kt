@@ -69,6 +69,30 @@ object MimeTypeDetector {
         }
     }
 
+    private val SUBTITLE_EXTENSIONS = setOf("srt", "vtt", "sub", "smi", "ass", "ssa")
+
+    /**
+     * True for sidecar subtitle files (srt/vtt/ass/...).
+     */
+    fun isSubtitle(fileName: String?): Boolean {
+        val ext = getExtension(fileName ?: "").lowercase(Locale.US)
+        return ext in SUBTITLE_EXTENSIONS
+    }
+
+    fun isSubtitle(mimeType: String?, fileName: String?): Boolean {
+        if (mimeType == "text/vtt") return true
+        return isSubtitle(fileName)
+    }
+
+    /**
+     * Detects whether a file name is a sidecar subtitle (for the media-style filter that
+     * keeps subtitles streamable but hidden from listings).
+     */
+    fun isTextWithSubtitleExt(fileName: String?, fallbackMime: String?): Boolean {
+        if (!isSubtitle(fileName)) return false
+        return fallbackMime == null || fallbackMime == "text/plain" || fallbackMime == "text/vtt"
+    }
+
     private fun getExtension(name: String): String {
         val lastDot = name.lastIndexOf('.')
         return if (lastDot >= 0 && lastDot < name.length - 1) {

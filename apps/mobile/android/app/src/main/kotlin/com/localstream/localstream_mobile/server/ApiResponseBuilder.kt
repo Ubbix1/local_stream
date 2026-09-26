@@ -1,7 +1,9 @@
 package com.localstream.localstream_mobile.server
 
 import android.os.Build
+import com.localstream.localstream_mobile.storage.FolderNode
 import com.localstream.localstream_mobile.storage.MediaSource
+import com.localstream.localstream_mobile.storage.SubtitleTrack
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -39,8 +41,58 @@ object ApiResponseBuilder {
         return json.toString()
     }
 
-    fun buildFilesJson(sources: List<MediaSource>): String {
+    fun buildFilesJson(
+        sources: List<MediaSource>,
+        durationMs: (MediaSource) -> Long? = { null },
+        subtitles: (MediaSource) -> List<SubtitleTrack> = { emptyList() }
+    ): String {
         val json = JSONObject()
+        json.put("items", buildItemsArray(sources, durationMs, subtitles))
+        json.put("protocolVersion", PROTOCOL_VERSION)
+        return json.toString()
+    }
+
+    /**
+     * Folder-oriented browsing response: direct child folders + direct items of a folder.
+     */
+    fun buildFolderViewJson(
+        nodes: List<FolderNode>,
+        items: List<MediaSource>,
+        durationMs: (MediaSource) -> Long? = { null },
+        subtitles: (MediaSource) -> List<SubtitleTrack> = { emptyList() }
+    ): String {
+        val json = JSONObject()
+        json.put("folders", buildFoldersArray(nodes))
+        json.put("items", buildItemsArray(items, durationMs, subtitles))
+        json.put("protocolVersion", PROTOCOL_VERSION)
+        return json.toString()
+    }
+
+    fun buildFoldersJson(nodes: List<FolderNode>): String {
+        val json = JSONObject()
+        json.put("folders", buildFoldersArray(nodes))
+        json.put("protocolVersion", PROTOCOL_VERSION)
+        return json.toString()
+    }
+
+    private fun buildFoldersArray(nodes: List<FolderNode>): JSONArray {
+        val arr = JSONArray()
+        for (node in nodes) {
+            val folder = JSONObject()
+            folder.put("id", node.id)
+            folder.put("name", node.name)
+            folder.put("parentId", node.parentId ?: JSONObject.NULL)
+            folder.put("itemCount", node.itemCount)
+            arr.put(folder)
+        }
+        return arr
+    }
+
+    private fun buildItemsArray(
+        sources: List<MediaSource>,
+        durationMs: (MediaSource) -> Long?,
+        subtitles: (MediaSource) -> List<SubtitleTrack>
+    ): JSONArray {
         val itemsArray = JSONArray()
         for (source in sources) {
             val item = JSONObject()
@@ -50,14 +102,35 @@ object ApiResponseBuilder {
             item.put("mimeType", source.mimeType)
             item.put("size", source.sizeBytes ?: -1L)
             item.put("available", source.exists())
+            item.put("folderId", source.folderId ?: JSONObject.NULL)
+            item.put("folderPath", source.folderPath ?: JSONObject.NULL)
+            val duration = durationMs(source)
+            if (duration != null) item.put("durationMs", duration) else item.put("durationMs", JSONObject.NULL)
+            if (source.mediaType == "video" || source.mediaType == "audio" || source.mediaType == "image") {
+                item.put("thumbUrl", "/api/v1/thumb/${source.id}")
+            }
+            val tracks = subtitles(source)
+            if (tracks.isNotEmpty()) {
+                val subArray = JSONArray()
+                for (track in tracks) {
+                    val t = JSONObject()
+                    t.put("id", track.id)
+                    t.put("name", track.name)
+                    t.put("mimeType", track.mimeType)
+                    subArray.put(t)
+                }
+                item.put("subtitles", subArray)
+            }
             itemsArray.put(item)
         }
-        json.put("items", itemsArray)
-        json.put("protocolVersion", PROTOCOL_VERSION)
-        return json.toString()
+        return itemsArray
     }
 
-    fun buildFileDetailJson(source: MediaSource): String {
+    fun buildFileDetailJson(
+        source: MediaSource,
+        durationMs: Long? = null,
+        subtitles: List<SubtitleTrack> = emptyList()
+    ): String {
         val json = JSONObject()
         json.put("id", source.id)
         json.put("name", source.displayName)
@@ -66,7 +139,33 @@ object ApiResponseBuilder {
         json.put("size", source.sizeBytes ?: -1L)
         json.put("source", source.sourceKind)
         json.put("available", source.exists())
+        json.put("folderId", source.folderId ?: JSONObject.NULL)
+        json.put("folderPath", source.folderPath ?: JSONObject.NULL)
+        if (durationMs != null) json.put("durationMs", durationMs) else json.put("durationMs", JSONObject.NULL)
+        if (source.mediaType == "video" || source.mediaType == "audio" || source.mediaType == "image") {
+            json.put("thumbUrl", "/api/v1/thumb/${source.id}")
+        }
+        if (subtitles.isNotEmpty()) {
+            val subArray = JSONArray()
+            for (track in subtitles) {
+                val t = JSONObject()
+                t.put("id", track.id)
+                t.put("name", track.name)
+                t.put("mimeType", track.mimeType)
+                subArray.put(t)
+            }
+            json.put("subtitles", subArray)
+        }
         json.put("streamUrl", "/api/v1/stream/${source.id}")
+        json.put("protocolVersion", PROTOCOL_VERSION)
+        return json.toString()
+    }
+
+    fun buildTranscodeStatusJson(sourceId: String): String {
+        val json = JSONObject()
+        json.put("id", sourceId)
+        json.put("supported", false)
+        json.put("status", "transcoding_not_configured")
         json.put("protocolVersion", PROTOCOL_VERSION)
         return json.toString()
     }

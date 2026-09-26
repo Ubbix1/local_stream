@@ -13,11 +13,15 @@ class SafMediaSource(
     override val displayName: String,
     override val mimeType: String,
     private val contentResolver: ContentResolver,
-    sizeHint: Long? = null
+    sizeHint: Long? = null,
+    override val folderId: String? = null,
+    override val folderPath: String? = null,
+    override val hidden: Boolean = false
 ) : MediaSource {
 
     override val sourceKind: String = "saf"
     override val mediaType: String = MimeTypeDetector.getMediaType(mimeType)
+    override val contentUri: Uri get() = uri
 
     override val sizeBytes: Long? by lazy {
         sizeHint?.takeIf { it > 0 } ?: queryLength()

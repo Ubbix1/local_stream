@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.security.MessageDigest
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -30,12 +31,34 @@ data class ImportProgress(
     )
 }
 
+data class FolderNode(
+    val id: String,
+    val name: String,
+    val parentId: String?,
+    val children: MutableList<String> = mutableListOf(),
+    @Volatile var itemCount: Int = 0,
+    val treeUri: String
+) {
+    fun toMap(): Map<String, Any?> = mapOf(
+        "id" to id,
+        "name" to name,
+        "parentId" to parentId,
+        "itemCount" to itemCount
+    )
+}
+
 class StorageManager(private val context: Context) {
 
     private val contentResolver = context.contentResolver
 
     // Thread-safe map of media sources keyed by safe ID
     private val sources = ConcurrentHashMap<String, MediaSource>()
+
+    // Subtitle sidecars paired with their parent video source
+    private val subtitleTracksById = ConcurrentHashMap<String, List<SubtitleTrack>>()
+
+    // Folder nodes keyed by stable folder id
+    private val folders = ConcurrentHashMap<String, FolderNode>()
 
     // Track folder URIs and the IDs belonging to them for clean revocation
     private val folderToSourceIds = ConcurrentHashMap<String, MutableSet<String>>()
@@ -66,8 +89,10 @@ class StorageManager(private val context: Context) {
         return SAFE_ID_REGEX.matches(id)
     }
 
+    fun isValidFolderId(id: String?): Boolean = isValidId(id)
+
     /**
-     * Looks up a registered media source by ID.
+     * Looks up a registered media source by ID (including hidden subtitle sidecars).
      */
     fun getSource(id: String): MediaSource? {
         if (!isValidId(id)) return null
@@ -75,15 +100,44 @@ class StorageManager(private val context: Context) {
     }
 
     /**
-     * Returns a snapshot list of all currently registered sources.
+     * Returns a snapshot list of all currently registered, non-hidden sources.
      */
     fun getAllSources(): List<MediaSource> {
-        return sources.values.toList()
+        return sources.values.filter { !it.hidden }
+    }
+
+    /**
+     * Subtitle tracks paired with the given video source id.
+     */
+    fun getSubtitleTracks(videoId: String): List<SubtitleTrack> {
+        return subtitleTracksById[videoId] ?: emptyList()
+    }
+
+    /**
+     * Root-level folders (one per granted SAF tree).
+     */
+    fun getRootFolders(): List<FolderNode> {
+        return folders.values.filter { it.parentId == null }.sortedBy { it.name.lowercase(Locale.US) }
+    }
+
+    /**
+     * Direct child folders of [parentFolderId].
+     */
+    fun getChildFolders(parentFolderId: String): List<FolderNode> {
+        val parent = folders[parentFolderId] ?: return emptyList()
+        return parent.children.mapNotNull { folders[it] }.sortedBy { it.name.lowercase(Locale.US) }
+    }
+
+    /**
+     * Media items directly inside [folderId] (excluding hidden sources).
+     */
+    fun getSourcesInFolder(folderId: String): List<MediaSource> {
+        return sources.values.filter { !it.hidden && it.folderId == folderId }
     }
 
     /**
      * Adds and persists a user-selected SAF directory tree URI.
-     * Scans the folder recursively for media files.
+     * Scans the folder recursively for media files while building the folder tree.
      */
     suspend fun addSafTreeUri(treeUri: Uri): Int = withContext(Dispatchers.IO) {
         val uriStr = treeUri.toString()
@@ -103,42 +157,123 @@ class StorageManager(private val context: Context) {
         }
 
         val addedIds = mutableSetOf<String>()
-        scanDocumentFile(folderDoc, addedIds)
+        scanDocumentFile(folderDoc, addedIds, parentFolderId = null, relSegments = emptyList())
 
         folderToSourceIds[uriStr] = addedIds
         onLibraryChanged?.invoke()
         addedIds.size
     }
 
-    private fun scanDocumentFile(dir: DocumentFile, collector: MutableSet<String>) {
+    private fun scanDocumentFile(
+        dir: DocumentFile,
+        collector: MutableSet<String>,
+        parentFolderId: String?,
+        relSegments: List<String>
+    ) {
         val files = try {
             dir.listFiles()
         } catch (_: Exception) {
             emptyArray()
         }
 
+        val folderId = stableFolderId(dir.uri)
+        val folderName = dir.name ?: "Library"
+        val relPath = relSegments + folderName
+
+        val existing = folders[folderId]
+        if (existing != null) {
+            // Re-scan may revisit the same folder; keep counts consistent
+            existing.itemCount = 0
+        } else {
+            folders[folderId] = FolderNode(
+                id = folderId,
+                name = folderName,
+                parentId = parentFolderId,
+                children = mutableListOf(),
+                itemCount = 0,
+                treeUri = dir.uri.toString()
+            )
+        }
+        if (parentFolderId != null) {
+            folders[parentFolderId]?.children?.let { if (!it.contains(folderId)) it.add(folderId) }
+        }
+
+        val folderVideos = mutableListOf<Pair<SafMediaSource, List<MediaSource>>>()
+        val dirSubtitles = mutableListOf<SafMediaSource>()
+
         for (file in files) {
             if (file.isDirectory) {
-                scanDocumentFile(file, collector)
+                scanDocumentFile(file, collector, folderId, relPath)
             } else if (file.isFile) {
                 val mimeType = MimeTypeDetector.detectMimeType(file.name, file.type)
-                val mediaType = MimeTypeDetector.getMediaType(mimeType)
-                // Filter to media types or common media containers
-                if (mediaType == "video" || mediaType == "audio" || mediaType == "image") {
-                    val id = "saf_" + UUID.randomUUID().toString().replace("-", "").take(16)
-                    val source = SafMediaSource(
-                        id = id,
+
+                if (MimeTypeDetector.isSubtitle(mimeType, file.name)) {
+                    val subId = "saf_" + UUID.randomUUID().toString().replace("-", "").take(16)
+                    val sub = SafMediaSource(
+                        id = subId,
                         uri = file.uri,
-                        displayName = file.name ?: "media_$id",
+                        displayName = file.name ?: "subtitle_$subId",
                         mimeType = mimeType,
                         contentResolver = contentResolver,
-                        sizeHint = file.length()
+                        sizeHint = file.length(),
+                        folderId = folderId,
+                        folderPath = relPath.joinToString("/"),
+                        hidden = true
                     )
-                    sources[id] = source
-                    collector.add(id)
+                    sources[subId] = sub
+                    dirSubtitles.add(sub)
+                } else {
+                    val mediaType = MimeTypeDetector.getMediaType(mimeType)
+                    // Filter to media types
+                    if (mediaType == "video" || mediaType == "audio" || mediaType == "image") {
+                        val id = "saf_" + UUID.randomUUID().toString().replace("-", "").take(16)
+                        val source = SafMediaSource(
+                            id = id,
+                            uri = file.uri,
+                            displayName = file.name ?: "media_$id",
+                            mimeType = mimeType,
+                            contentResolver = contentResolver,
+                            sizeHint = file.length(),
+                            folderId = folderId,
+                            folderPath = relPath.joinToString("/")
+                        )
+                        sources[id] = source
+                        collector.add(id)
+                        if (mediaType == "video") folderVideos.add(source to emptyList())
+                        folders[folderId]?.let { it.itemCount = it.itemCount + 1 }
+                    }
                 }
             }
         }
+
+        // Pair same-base subtitle sidecars with videos in the same directory
+        for ((video, _) in folderVideos) {
+            val videoBase = baseNameOf(video.displayName)
+            val tracks = dirSubtitles
+                .filter { baseNameOf(it.displayName) == videoBase }
+                .map { SubtitleTrack(id = it.id, name = it.displayName, mimeType = it.mimeType) }
+                .sortedBy { it.name }
+            if (tracks.isNotEmpty()) {
+                subtitleTracksById[video.id] = tracks
+            }
+        }
+    }
+
+    private fun baseNameOf(name: String): String {
+        val dot = name.lastIndexOf('.')
+        return (if (dot > 0) name.substring(0, dot) else name).lowercase(Locale.US).trim()
+    }
+
+    /**
+     * Deterministic, URL-safe folder id derived from the document uri so folders
+     * keep a stable identity across rescans (unlike per-file UUIDs).
+     */
+    private fun stableFolderId(uri: Uri): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest(uri.toString().toByteArray(Charsets.UTF_8))
+            .take(8)
+            .joinToString("") { "%02x".format(it) }
+        return "dir_$digest"
     }
 
     /**
@@ -316,6 +451,7 @@ class StorageManager(private val context: Context) {
             } catch (_: Exception) {
                 // Closing a source must never break library removal
             }
+            subtitleTracksById.remove(id)
             onLibraryChanged?.invoke()
             return true
         }
@@ -335,7 +471,7 @@ class StorageManager(private val context: Context) {
                 val folderDoc = DocumentFile.fromTreeUri(context, uri)
                 if (folderDoc != null && folderDoc.canRead()) {
                     val addedIds = mutableSetOf<String>()
-                    scanDocumentFile(folderDoc, addedIds)
+                    scanDocumentFile(folderDoc, addedIds, parentFolderId = null, relSegments = emptyList())
                     folderToSourceIds[uriStr] = addedIds
                 }
             } catch (_: Exception) {
@@ -362,6 +498,8 @@ class StorageManager(private val context: Context) {
             } catch (_: Exception) {}
         }
         sources.clear()
+        folders.clear()
+        subtitleTracksById.clear()
         folderToSourceIds.clear()
         onLibraryChanged?.invoke()
     }

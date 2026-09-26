@@ -15,6 +15,8 @@ class ImportedMediaSource(
 
     override val sourceKind: String = "imported"
     override val mediaType: String = MimeTypeDetector.getMediaType(mimeType)
+    override val filePath: String get() = file.absolutePath
+    override val hidden: Boolean get() = MimeTypeDetector.isSubtitle(mimeType, displayName)
     override val sizeBytes: Long get() = if (file.exists()) file.length() else 0L
 
     override fun exists(): Boolean = file.exists() && file.canRead()

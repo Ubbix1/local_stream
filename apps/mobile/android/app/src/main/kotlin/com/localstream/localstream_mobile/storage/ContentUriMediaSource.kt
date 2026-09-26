@@ -17,6 +17,7 @@ class ContentUriMediaSource(
 ) : MediaSource {
 
     override val sourceKind: String = "shared"
+    override val contentUri: Uri get() = uri
 
     override val displayName: String by lazy {
         initialDisplayName ?: queryDisplayName() ?: "shared_media_${id.take(8)}"

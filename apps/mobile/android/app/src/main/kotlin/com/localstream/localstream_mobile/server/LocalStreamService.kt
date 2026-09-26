@@ -17,6 +17,7 @@ import com.localstream.localstream_mobile.MainActivity
 import com.localstream.localstream_mobile.discovery.MdnsService
 import com.localstream.localstream_mobile.network.NetworkInfoProvider
 import com.localstream.localstream_mobile.sharing.ShareReceiverActivity
+import com.localstream.localstream_mobile.storage.MediaMetadataCache
 import com.localstream.localstream_mobile.storage.StorageManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +39,12 @@ class LocalStreamService : Service() {
     lateinit var networkInfoProvider: NetworkInfoProvider
         private set
     lateinit var mdnsService: MdnsService
+        private set
+    lateinit var accessControl: AccessControl
+        private set
+    lateinit var serverEvents: ServerEvents
+        private set
+    lateinit var metadataCache: MediaMetadataCache
         private set
     private lateinit var deviceFeedbackClient: DeviceFeedbackClient
 
@@ -95,10 +102,23 @@ class LocalStreamService : Service() {
 
         storageManager = StorageManager(applicationContext)
         stateHolder = ServerStateHolder()
-        mediaServer = HttpMediaServer(storageManager, stateHolder)
+        accessControl = AccessControl(applicationContext)
+        serverEvents = ServerEvents()
+        metadataCache = MediaMetadataCache(applicationContext)
+        mediaServer = HttpMediaServer(storageManager, stateHolder, serverEvents, accessControl, metadataCache)
         networkInfoProvider = NetworkInfoProvider(applicationContext)
         mdnsService = MdnsService(applicationContext)
         deviceFeedbackClient = DeviceFeedbackClient(applicationContext)
+
+        // Broadcast library changes and import progress over SSE
+        storageManager.onLibraryChanged = {
+            serverEvents.broadcast("library", "{\"type\":\"library\"}")
+            updateNotification()
+        }
+        storageManager.onImportProgress = { progress ->
+            val json = org.json.JSONObject(progress.toMap()).toString()
+            serverEvents.broadcast("import", json)
+        }
 
         // Listen for IP address changes
         networkInfoProvider.onNetworkChanged = { ips ->
@@ -116,6 +136,10 @@ class LocalStreamService : Service() {
             storageManager.reloadPersistedImports()
             storageManager.reloadPersistedTrees()
             drainPendingSharedImports()
+            // Warm duration metadata so library listings can show runtimes
+            try {
+                metadataCache.warmDurations(storageManager.getAllSources())
+            } catch (_: Exception) {}
         }
 
         createNotificationChannel()

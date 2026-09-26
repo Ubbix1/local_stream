@@ -187,6 +187,32 @@ class LocalStreamMethodChannel(
                 result.success(pending)
             }
 
+            "getPinState" -> {
+                val required = LocalStreamService.instance?.accessControl?.pinRequired ?: false
+                result.success(mapOf("required" to required))
+            }
+
+            "setAccessPin" -> {
+                val pin = call.argument<String>("pin") ?: ""
+                val service = LocalStreamService.instance
+                if (service == null) {
+                    result.error("SERVICE_UNAVAILABLE", "LocalStream service is not running", null)
+                } else {
+                    service.accessControl.setPin(pin)
+                    result.success(true)
+                }
+            }
+
+            "clearAccessPin" -> {
+                val service = LocalStreamService.instance
+                if (service == null) {
+                    result.error("SERVICE_UNAVAILABLE", "LocalStream service is not running", null)
+                } else {
+                    service.accessControl.clearPin()
+                    result.success(true)
+                }
+            }
+
             else -> result.notImplemented()
         }
     }
