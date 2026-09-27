@@ -45,7 +45,6 @@ jobs:
         run: flutter analyze --no-pub
 
       - name: flutter test
-        if: hashFiles('apps/${{ matrix.app }}/test/**') != ''
         working-directory: apps/${{ matrix.app }}
         run: flutter test
 
