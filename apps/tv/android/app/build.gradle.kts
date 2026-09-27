@@ -29,7 +29,7 @@ val envStorePath = System.getenv("LS_KEYSTORE_PATH")
 val releaseKeystoreFile: File? = when {
     !envStoreB64.isNullOrBlank() -> {
         val decoded = Base64.getDecoder().decode(envStoreB64)
-        val target = rootProject.file("android/release-keystore.jks")
+        val target = rootProject.file("release-keystore.jks")
         target.parentFile?.mkdirs()
         target.writeBytes(decoded)
         target

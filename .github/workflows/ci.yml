@@ -77,6 +77,11 @@ jobs:
         # secrets are present. The app's build.gradle.kts reads them via
         # LS_KEYSTORE_BASE64 / LS_STORE_PASSWORD / LS_KEY_ALIAS /
         # LS_KEY_PASSWORD and falls back to the debug key otherwise.
+        env:
+          LS_KEYSTORE_BASE64: ${{ secrets.LS_KEYSTORE_BASE64 }}
+          LS_STORE_PASSWORD: ${{ secrets.LS_STORE_PASSWORD }}
+          LS_KEY_ALIAS: ${{ secrets.LS_KEY_ALIAS }}
+          LS_KEY_PASSWORD: ${{ secrets.LS_KEY_PASSWORD }}
         run: flutter build apk --release
 
       - name: upload apk
@@ -114,6 +119,11 @@ jobs:
         working-directory: apps/tv
         # Release APKs are signed with the same upload keystore as mobile
         # when the repo secrets (LS_KEYSTORE_BASE64 etc.) are present.
+        env:
+          LS_KEYSTORE_BASE64: ${{ secrets.LS_KEYSTORE_BASE64 }}
+          LS_STORE_PASSWORD: ${{ secrets.LS_STORE_PASSWORD }}
+          LS_KEY_ALIAS: ${{ secrets.LS_KEY_ALIAS }}
+          LS_KEY_PASSWORD: ${{ secrets.LS_KEY_PASSWORD }}
         run: flutter build apk --release
 
       - name: upload apk
