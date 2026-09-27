@@ -62,6 +62,13 @@ interface MediaSource : Closeable {
     fun exists(): Boolean
 
     /**
+     * Permanently deletes the underlying file/resource from disk.
+     * Returns true when the file is gone. Best-effort: sources without a
+     * delete grant (e.g. read-only SAF trees) return false.
+     */
+    fun deleteFromDisk(): Boolean = false
+
+    /**
      * Opens a stream from the beginning of the media resource.
      */
     fun openInputStream(): InputStream

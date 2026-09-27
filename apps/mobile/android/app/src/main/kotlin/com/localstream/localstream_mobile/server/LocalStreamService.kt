@@ -105,6 +105,7 @@ class LocalStreamService : Service() {
         accessControl = AccessControl(applicationContext)
         serverEvents = ServerEvents()
         metadataCache = MediaMetadataCache(applicationContext)
+        storageManager.metadataCache = metadataCache
         mediaServer = HttpMediaServer(storageManager, stateHolder, serverEvents, accessControl, metadataCache)
         networkInfoProvider = NetworkInfoProvider(applicationContext)
         mdnsService = MdnsService(applicationContext)

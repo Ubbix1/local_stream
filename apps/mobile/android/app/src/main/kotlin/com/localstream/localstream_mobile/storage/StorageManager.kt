@@ -63,6 +63,15 @@ class StorageManager(private val context: Context) {
     // Track folder URIs and the IDs belonging to them for clean revocation
     private val folderToSourceIds = ConcurrentHashMap<String, MutableSet<String>>()
 
+    // URIs/paths the user removed from the library. Re-scans skip them so a
+    // removal never resurrects on relaunch (fallback when a file cannot be
+    // deleted from disk, e.g. a read-only SAF tree).
+    private val removedUris: MutableSet<String> = loadRemovedUris()
+
+    // Optional cache of durations/thumbnails, wired by the service for cleanup.
+    @Volatile
+    var metadataCache: MediaMetadataCache? = null
+
     @Volatile
     var onLibraryChanged: (() -> Unit)? = null
 
@@ -76,9 +85,22 @@ class StorageManager(private val context: Context) {
     companion object {
         private const val PREFS_NAME = "localstream_storage"
         private const val KEY_SAF_TREES = "saf_tree_uris"
+        private const val KEY_REMOVED_URIS = "removed_uri_set"
 
         // Disallow path traversal characters or invalid patterns
         private val SAFE_ID_REGEX = Regex("^[a-zA-Z0-9_-]{1,64}$")
+    }
+
+    private fun loadRemovedUris(): MutableSet<String> {
+        val set = ConcurrentHashMap.newKeySet<String>()
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        set.addAll(prefs.getStringSet(KEY_REMOVED_URIS, emptySet()) ?: emptySet())
+        return set
+    }
+
+    private fun persistRemovedUris() {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putStringSet(KEY_REMOVED_URIS, removedUris.toSet()).apply()
     }
 
     /**
@@ -205,6 +227,9 @@ class StorageManager(private val context: Context) {
             if (file.isDirectory) {
                 scanDocumentFile(file, collector, folderId, relPath)
             } else if (file.isFile) {
+                val fileUri = file.uri.toString()
+                if (removedUris.contains(fileUri)) continue
+
                 val mimeType = MimeTypeDetector.detectMimeType(file.name, file.type)
 
                 if (MimeTypeDetector.isSubtitle(mimeType, file.name)) {
@@ -343,6 +368,7 @@ class StorageManager(private val context: Context) {
         val storageDir = File(context.filesDir, "imported_media")
         val files = storageDir.listFiles()?.filter { it.isFile && it.canRead() } ?: emptyList()
         for (file in files) {
+            if (removedUris.contains(file.absolutePath)) continue
             val mimeType = MimeTypeDetector.detectMimeType(file.name)
             val mediaType = MimeTypeDetector.getMediaType(mimeType)
             if (mediaType != "video" && mediaType != "audio" && mediaType != "image") continue
@@ -441,21 +467,69 @@ class StorageManager(private val context: Context) {
     }
 
     /**
-     * Removes a source by ID and closes it.
+     * Removes a source by ID, deletes its file from disk when possible, and
+     * closes resources. Paired subtitle sidecars are removed and deleted too.
+     * Returns true when the source was found in the library.
      */
     fun removeSource(id: String): Boolean {
-        val removed = sources.remove(id)
-        if (removed != null) {
-            try {
-                removed.close()
-            } catch (_: Exception) {
-                // Closing a source must never break library removal
-            }
-            subtitleTracksById.remove(id)
-            onLibraryChanged?.invoke()
-            return true
+        val source = sources.remove(id) ?: return false
+        try {
+            source.close()
+        } catch (_: Exception) {
+            // Closing a source must never break library removal
         }
-        return false
+
+        removeFromDisk(source)
+
+        // Drop (and delete) subtitle sidecars paired with this source.
+        subtitleTracksById.remove(id)?.forEach { track ->
+            val sidecar = sources.remove(track.id)
+            if (sidecar != null) {
+                try {
+                    sidecar.close()
+                } catch (_: Exception) {}
+                removeFromDisk(sidecar)
+                metadataCache?.removeLocation(sidecar.contentUri?.toString() ?: sidecar.filePath)
+            }
+        }
+
+        // Clear cached duration/thumbnail data for the removed file.
+        metadataCache?.removeLocation(source.contentUri?.toString() ?: source.filePath)
+
+        // Keep folder bookkeeping consistent.
+        folders[source.folderId]?.let { node ->
+            node.itemCount = maxOf(0, node.itemCount - 1)
+            folderToSourceIds[node.treeUri]?.remove(id)
+        }
+
+        onLibraryChanged?.invoke()
+        return true
+    }
+
+    /**
+     * Physically deletes the underlying file. When deletion is not possible,
+     * remembers its location so re-scans never resurrect it.
+     */
+    private fun removeFromDisk(source: MediaSource) {
+        val deleted = try {
+            source.deleteFromDisk()
+        } catch (_: Exception) {
+            false
+        }
+        if (deleted) return
+
+        // Only persisted source kinds (SAF trees, app imports) can resurrect
+        // on relaunch, so only they need a durable exclusion marker.
+        if (source.sourceKind != "saf" && source.sourceKind != "imported") return
+
+        var persisted = false
+        source.contentUri?.let {
+            if (removedUris.add(it.toString())) persisted = true
+        }
+        source.filePath?.let {
+            if (removedUris.add(it)) persisted = true
+        }
+        if (persisted) persistRemovedUris()
     }
 
     /**

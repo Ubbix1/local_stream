@@ -83,6 +83,14 @@ class ContentUriMediaSource(
         }
     }
 
+    override fun deleteFromDisk(): Boolean {
+        return try {
+            contentResolver.delete(uri, null, null) > 0
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     override fun openInputStream(): InputStream {
         return contentResolver.openInputStream(uri)
             ?: throw FileNotFoundException("Unable to open input stream for shared URI: $uri")

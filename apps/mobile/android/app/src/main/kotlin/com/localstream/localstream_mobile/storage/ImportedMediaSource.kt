@@ -21,6 +21,19 @@ class ImportedMediaSource(
 
     override fun exists(): Boolean = file.exists() && file.canRead()
 
+    override fun deleteFromDisk(): Boolean {
+        val deleted = try {
+            file.delete()
+        } catch (e: Exception) {
+            false
+        }
+        // Tidy up the import directory when it becomes empty
+        try {
+            file.parentFile?.takeIf { it.exists() && it.listFiles()?.isEmpty() == true }?.delete()
+        } catch (_: Exception) {}
+        return deleted
+    }
+
     override fun openInputStream(): InputStream {
         if (!exists()) throw FileNotFoundException("Imported file does not exist: ${file.absolutePath}")
         return FileInputStream(file)

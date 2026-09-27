@@ -3,6 +3,8 @@ package com.localstream.localstream_mobile.storage
 import android.content.ContentResolver
 import android.content.res.AssetFileDescriptor
 import android.net.Uri
+import android.provider.DocumentsContract
+import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.InputStream
@@ -42,6 +44,26 @@ class SafMediaSource(
             contentResolver.openAssetFileDescriptor(uri, "r")?.use { true } ?: false
         } catch (e: Exception) {
             false
+        }
+    }
+
+    override fun deleteFromDisk(): Boolean {
+        return when (uri.scheme) {
+            "content" -> try {
+                DocumentsContract.deleteDocument(contentResolver, uri)
+            } catch (e: Exception) {
+                try {
+                    contentResolver.delete(uri, null, null) > 0
+                } catch (e2: Exception) {
+                    false
+                }
+            }
+            "file" -> try {
+                File(uri.path ?: return false).delete()
+            } catch (e: Exception) {
+                false
+            }
+            else -> false
         }
     }
 
