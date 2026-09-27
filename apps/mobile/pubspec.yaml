@@ -1,6 +1,7 @@
 name: localstream_mobile
 description: LocalStream — turns your Android phone into a local LAN media server.
 publish_to: 'none'
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -26,6 +27,12 @@ dependencies:
 
   # Liquid Glass buttons
   liquid_glass_widgets: ^1.7.2
+
+  # GitHub release check
+  http: ^1.2.0
+
+  # Open the latest release page in the browser
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:

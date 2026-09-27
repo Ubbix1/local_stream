@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import '../models/app_version.dart';
 import '../models/connected_client.dart';
 import '../models/media_item.dart';
 import '../models/server_status.dart';
@@ -46,6 +47,19 @@ class PlatformBridge {
       }
     } catch (_) {}
     return const ServerStatus();
+  }
+
+  Future<AppVersion> getAppVersion() async {
+    try {
+      final map = await _methodChannel.invokeMethod<Map<dynamic, dynamic>>('getAppVersion');
+      if (map != null) {
+        return AppVersion(
+          versionName: (map['versionName'] as String?) ?? '',
+          versionCode: (map['versionCode'] as int?) ?? 0,
+        );
+      }
+    } catch (_) {}
+    return const AppVersion();
   }
 
   Future<List<String>> getNetworkAddresses() async {

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import com.localstream.localstream_mobile.BuildConfig
 import com.localstream.localstream_mobile.server.LocalStreamService
 import com.localstream.localstream_mobile.server.ServerState
 import com.localstream.localstream_mobile.server.ServerStatus
@@ -103,6 +104,15 @@ class LocalStreamMethodChannel(
                 val service = LocalStreamService.instance
                 val status = service?.stateHolder?.buildSnapshot() ?: ServerStatus(state = ServerState.STOPPED)
                 result.success(status.toMap())
+            }
+
+            "getAppVersion" -> {
+                result.success(
+                    mapOf(
+                        "versionName" to BuildConfig.VERSION_NAME,
+                        "versionCode" to BuildConfig.VERSION_CODE
+                    )
+                )
             }
 
             "getClients" -> {

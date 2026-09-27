@@ -152,11 +152,19 @@ jobs:
           name: localstream-tv-release-apk
           path: dist-tv
 
+      # Distinct asset names (both artifacts are named app-release.apk, which
+      # would otherwise collide on the release). The apps' update checkers use
+      # these names to pick the right APK from the latest release.
+      - name: stage release assets
+        run: |
+          mv "dist/app-release.apk" "dist/localstream-mobile-${{ github.ref_name }}.apk"
+          mv "dist-tv/app-release.apk" "dist-tv/localstream-tv-${{ github.ref_name }}.apk"
+
       - name: publish release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/app-release.apk
-            dist-tv/app-release.apk
+            dist/localstream-mobile-${{ github.ref_name }}.apk
+            dist-tv/localstream-tv-${{ github.ref_name }}.apk
           generate_release_notes: true
           fail_on_unmatched_files: true

@@ -11,6 +11,7 @@ class MainActivity : FlutterActivity() {
     companion object {
         private const val METHOD_CHANNEL = "localstream.tv/discovery"
         private const val EVENT_CHANNEL = "localstream.tv/discovery/events"
+        private const val APP_CHANNEL = "localstream.tv/app"
     }
 
     private var discovery: DiscoveryService? = null
@@ -63,6 +64,20 @@ class MainActivity : FlutterActivity() {
                 }
             }
         )
+
+        MethodChannel(messenger, APP_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getAppVersion" -> {
+                    result.success(
+                        mapOf(
+                            "versionName" to BuildConfig.VERSION_NAME,
+                            "versionCode" to BuildConfig.VERSION_CODE
+                        )
+                    )
+                }
+                else -> result.notImplemented()
+            }
+        }
     }
 
     override fun onDestroy() {

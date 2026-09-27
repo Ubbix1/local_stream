@@ -10,6 +10,7 @@ import '../../core/network/api_client.dart';
 import '../../repositories/media_repository.dart';
 import '../../services/discovery_service.dart';
 import '../../services/server_store.dart';
+import '../../services/update_service.dart';
 import '../browser/browser_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -23,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _store = ServerStore();
   final _addressController = TextEditingController();
   final _discovery = DiscoveryService();
+  final _updateService = UpdateService();
   final _foundServers = <DiscoveredServer>[];
   final _probedKeys = <String>{};
 
@@ -40,11 +42,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _updateService.onChanged = _onUpdateChanged;
+    _updateService.init();
     _loadSaved();
+  }
+
+  void _onUpdateChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _updateService.onChanged = null;
     _scanTimer?.cancel();
     _discoverySub?.cancel();
     _discovery.dispose();
@@ -256,12 +265,84 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 900),
-            child: _configuring ? _buildSetup() : _buildLauncher(),
-          ),
+        child: Column(
+          children: [
+            if (_updateService.updateAvailable && !_updateService.dismissed)
+              _buildUpdateBanner(),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: _configuring ? _buildSetup() : _buildLauncher(),
+                ),
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildUpdateBanner() {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.primaryContainer,
+      child: Row(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+            child: Text(
+              'Update available: ${_updateService.latestVersion}',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: scheme.onPrimaryContainer,
+              ),
+            ),
+          ),
+          const Spacer(),
+          TextButton(
+            onPressed: () => _showUpdateDialog(context),
+            child: const Text('How to update'),
+          ),
+          TextButton(
+            onPressed: _updateService.dismiss,
+            child: const Text('Later'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showUpdateDialog(BuildContext context) async {
+    final url = _updateService.latestAssetUrl.isNotEmpty
+        ? _updateService.latestAssetUrl
+        : _updateService.latestReleaseUrl;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Update available: ${_updateService.latestVersion}'),
+        content: Text(url.isEmpty
+            ? 'A newer build is available. Open the LocalStream GitHub releases page on a computer and sideload the Android TV APK onto this TV.'
+            : 'Download the Android TV APK from the link below on a computer, transfer it to this TV, and sideload it.\n\n$url'),
+        actions: [
+          if (url.isNotEmpty)
+            TextButton(
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: url));
+                _updateService.dismiss();
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext);
+                }
+              },
+              child: const Text('Copy link'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Later'),
+          ),
+        ],
       ),
     );
   }

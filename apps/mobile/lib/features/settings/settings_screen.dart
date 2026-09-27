@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../../services/native_bridge.dart';
+import '../../services/update_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -9,6 +11,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final updates = context.watch<UpdateService>();
 
     return Scaffold(
       appBar: AppBar(
@@ -78,11 +81,58 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   const Divider(),
                   const SizedBox(height: 8),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('App Version', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      Text('0.1.0', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      const Text('App Version', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text(
+                        updates.installedVersion.isEmpty
+                            ? '—'
+                            : updates.installedVersion,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      if (updates.checking)
+                        const SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      else
+                        Icon(
+                          updates.error != null
+                              ? Icons.error_outline
+                              : (updates.updateAvailable
+                                  ? Icons.arrow_circle_up
+                                  : Icons.check_circle_outline),
+                          size: 14,
+                          color: updates.error != null
+                              ? colorScheme.error
+                              : (updates.updateAvailable ? colorScheme.primary : Colors.greenAccent),
+                        ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          updates.checking
+                              ? 'Checking for updates…'
+                              : updates.error != null
+                                  ? '${updates.error}'
+                                  : updates.updateAvailable
+                                      ? 'New version ${updates.latestVersion} available'
+                                      : (updates.installedVersion.isEmpty
+                                          ? 'Update checks every launch'
+                                          : 'Up to date'),
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: updates.checking ? null : updates.refresh,
+                        child: const Text('Check for updates'),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
