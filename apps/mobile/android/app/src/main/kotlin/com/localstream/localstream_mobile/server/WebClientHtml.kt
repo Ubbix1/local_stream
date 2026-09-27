@@ -322,12 +322,16 @@ object WebClientHtml {
             }
             @keyframes spin{to{transform:rotate(360deg)}}
             .perror{
-                position:absolute;inset:0;display:flex;flex-direction:column;gap:16px;
-                align-items:center;justify-content:center;padding:28px;text-align:center;
-                background:rgba(5,8,12,.82);
+                position:absolute;top:0;left:0;right:0;
+                display:flex;flex-direction:column;gap:10px;
+                align-items:center;text-align:center;
+                padding:14px 16px;background:rgba(5,8,12,.88);
+                border-bottom:1px solid var(--border);
+                -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
             }
-            .perror p{max-width:520px;font-size:14px;color:var(--text);line-height:1.6}
-            .perror p .err-code{display:block;margin-top:6px;font-size:12px;color:var(--muted)}
+            .perror .prow{flex-wrap:wrap;justify-content:center}
+            .perror p{max-width:640px;font-size:13px;color:var(--text);line-height:1.5;margin:0}
+            .perror p .err-code{display:block;margin-top:4px;font-size:11px;color:var(--muted)}
 
             .controls{
                 background:rgba(13,17,23,.82);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
