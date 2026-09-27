@@ -32,7 +32,7 @@ if (Test-Path $keystore) {
 
 $keyPropsPath = Join-Path $repoRoot "apps\mobile\android\key.properties"
 @"
-storeFile=android/release-keystore.jks
+storeFile=release-keystore.jks
 storePassword=$Password
 keyAlias=$Alias
 keyPassword=$Password
