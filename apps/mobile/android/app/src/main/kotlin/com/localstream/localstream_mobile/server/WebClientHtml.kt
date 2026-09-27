@@ -298,8 +298,11 @@ object WebClientHtml {
                 position:relative;border-radius:14px;overflow:hidden;background:#000;
                 border:1px solid var(--border);
                 box-shadow:0 30px 80px rgba(0,0,0,.55);
+                display:flex;align-items:center;justify-content:center;
             }
             .stage video,.stage audio{width:100%;display:block}
+            .stage video{height:auto;object-fit:contain;max-height:calc(100vh - 190px);max-height:calc(100dvh - 190px)}
+            .stage audio{height:auto}
             .stage:fullscreen{display:flex;align-items:center;justify-content:center;border-radius:0;border:none}
             .stage:fullscreen video,.stage:fullscreen audio{width:100%;height:100%;object-fit:contain}
             .cover-layer{
@@ -391,6 +394,7 @@ object WebClientHtml {
                 <symbol id="i-retry" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
                 <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></symbol>
                 <symbol id="i-external" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></symbol>
+                <symbol id="i-vlc" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="15" rx="2"/><path d="M10 7.5l5.5 3-5.5 3z"/><path d="M8 21h8M12 18v3"/></symbol>
                 <symbol id="i-folder" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></symbol>
                 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
                 <symbol id="i-sub" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M7 15h6M7 12h10M13 15h4"/></symbol>
@@ -446,6 +450,7 @@ object WebClientHtml {
                     <div class="player-top">
                         <div class="ptitle" id="ptitle"></div>
                         <div class="prow">
+                            <button class="glass-btn glass-btn--icon" id="pVlc" title="Copy network stream URL for VLC" aria-label="Copy network stream URL for VLC"><svg class="icon"><use href="#i-vlc"></use></svg></button>
                             <button class="glass-btn glass-btn--icon" id="pLink" aria-label="Open stream in a new window"><svg class="icon"><use href="#i-external"></use></svg></button>
                             <button class="glass-btn glass-btn--icon" id="pClose" aria-label="Close player"><svg class="icon"><use href="#i-x"></use></svg></button>
                         </div>
@@ -460,6 +465,7 @@ object WebClientHtml {
                             <p><span id="perrorText"></span><span class="err-code" id="perrorCode"></span></p>
                             <div class="prow">
                                 <button class="glass-btn glass-btn--sm glass-btn--accent" id="pRetry"><svg class="icon"><use href="#i-retry"></use></svg> Retry</button>
+                                <button class="glass-btn glass-btn--sm" id="pVlcErr"><svg class="icon"><use href="#i-vlc"></use></svg> Copy VLC link</button>
                                 <a class="glass-btn glass-btn--sm" id="pDownload" href="#" download><svg class="icon"><use href="#i-download"></use></svg> Download</a>
                             </div>
                         </div>
@@ -530,6 +536,8 @@ object WebClientHtml {
                 var folderStack = [];
                 var loginShown = false;
                 var eventsSrc = null;
+                var authToken = null;   // returned by /api/v1/auth/verify; used for shareable/VLC URLs
+                var retryingAt = 0;     // timestamp guard: ignore transient errors right after a manual reload
 
                 var $ = function(id){ return document.getElementById(id); };
                 var library = $('library');
@@ -789,9 +797,14 @@ object WebClientHtml {
                         body: JSON.stringify({ pin: pin })
                     }).then(function(res){
                         if (res.status === 200){
-                            hideLogin();
-                            loadLibrary(false);
-                            checkConn();
+                            return res.json().catch(function(){ return {}; }).then(function(data){
+                                if (data && typeof data.token === 'string' && data.token){
+                                    authToken = data.token;
+                                }
+                                hideLogin();
+                                loadLibrary(false);
+                                checkConn();
+                            });
                         } else {
                             return res.json().catch(function(){ return {}; }).then(function(data){
                                 throw new Error((data && data.error && data.error.message) || 'Incorrect PIN');
@@ -912,6 +925,7 @@ object WebClientHtml {
                     if (playerOpen) closePlayer();
                     mediaMeta = item;
                     demuxRetries = 0;
+                    retryingAt = 0;
                     var id = encodeURIComponent(item.id);
                     mediaType = (item.type === 'video' || item.type === 'audio') ? item.type : 'video';
                     document.title = (item.name || 'Media') + ' — LocalStream';
@@ -1029,7 +1043,12 @@ object WebClientHtml {
                 function bindMediaEvents(){
                     mediaEl.addEventListener('waiting', function(){ spinner.hidden = false; });
                     mediaEl.addEventListener('stalled', function(){ spinner.hidden = false; });
-                    mediaEl.addEventListener('playing', function(){ spinner.hidden = true; cover.hidden = true; });
+                    mediaEl.addEventListener('playing', function(){
+                        spinner.hidden = true;
+                        cover.hidden = true;
+                        $('perror').hidden = true;
+                        retryingAt = 0;
+                    });
                     mediaEl.addEventListener('canplay', function(){ spawnHideControls(); });
                     mediaEl.addEventListener('play', function(){ setPlayIcon(true); });
                     mediaEl.addEventListener('pause', function(){ setPlayIcon(false); showControls(); });
@@ -1048,20 +1067,31 @@ object WebClientHtml {
                 }
 
                 function onMediaError(){
+                    if (Date.now() - retryingAt < 4000){ return; }
+                    var el = mediaEl;
+                    // If playback is actually progressing (audio keeps playing),
+                    // the erroring resource was auxiliary — don't block the UI.
+                    if (el && !el.paused && el.readyState >= 2 && isFinite(el.currentTime) && el.currentTime > 0){
+                        $('perror').hidden = true;
+                        cover.hidden = true;
+                        spinner.hidden = true;
+                        return;
+                    }
                     spinner.hidden = true;
                     cover.hidden = true;
-                    var code = mediaEl && mediaEl.error ? mediaEl.error.code : 0;
-                    var detail = mediaEl && mediaEl.error && mediaEl.error.message ? mediaEl.error.message : '';
+                    var code = el && el.error ? el.error.code : 0;
+                    var detail = el && el.error && el.error.message ? el.error.message : '';
                     var isDemux = /DEMUXER|FFmpegDemuxer|PIPELINE|CODEC/i.test(detail);
+                    var vlcHint = ' Tap the VLC button to copy the network stream URL and play it in VLC (Ctrl+N).';
                     var msg;
                     if (isDemux){
-                        msg = 'This browser could not open or decode this file. Its container or audio/video codec may not be supported here. Try another browser (e.g. Chrome, Edge, Firefox), or download the file and open it in a local player like VLC.';
+                        msg = 'This browser could not open or decode this file. Its container or audio/video codec (e.g. DTS, TrueHD, AC-3) may not be supported in the browser.' + vlcHint;
                     } else if (code === 4){
-                        msg = 'Unable to play this media in your browser. The stream may use a video or audio codec that this browser does not support.';
+                        msg = 'Unable to play this media in your browser. The stream may use a video or audio codec that this browser does not support.' + vlcHint;
                     } else if (code === 2){
                         msg = 'The network connection was interrupted.';
                     } else {
-                        msg = 'Unable to play this video. Try another browser or media file.';
+                        msg = 'Unable to play this video. Try another browser or media file.' + vlcHint;
                     }
                     $('perrorText').textContent = msg;
                     $('perrorCode').textContent = detail ? detail : (code ? 'Error ' + code : '');
@@ -1077,6 +1107,7 @@ object WebClientHtml {
                     $('perror').hidden = true;
                     cover.hidden = true;
                     spinner.hidden = false;
+                    retryingAt = Date.now();
                     var src = mediaEl.getAttribute('src');
                     var mime = mediaEl.getAttribute('type');
                     mediaEl.removeAttribute('src');
@@ -1085,13 +1116,26 @@ object WebClientHtml {
                     if (mime) mediaEl.setAttribute('type', mime);
                     mediaEl.play().catch(function(err){
                         spinner.hidden = true;
+                        retryingAt = 0;
                         if (err && err.name !== 'AbortError'){
-                            $('perrorText').textContent = 'Still unable to play this media in this browser.';
+                            $('perrorText').textContent = 'Still unable to play this media in this browser. Try the VLC button to stream it externally.';
                             $('perrorCode').textContent = err ? String(err.name) : '';
                             $('perror').hidden = false;
                             probeTranscode(mediaMeta);
                         }
                     });
+                    // Safety net: if the reload never plays, surface the error again.
+                    setTimeout(function(){
+                        if (Date.now() - retryingAt >= 4000){
+                            retryingAt = 0;
+                            if (mediaEl && mediaEl.paused && (!isFinite(mediaEl.currentTime) || mediaEl.currentTime === 0)){
+                                $('perrorText').textContent = 'Still unable to play this media in this browser. Try the VLC button to stream it externally.';
+                                $('perrorCode').textContent = '';
+                                $('perror').hidden = false;
+                                probeTranscode(mediaMeta);
+                            }
+                        }
+                    }, 4200);
                 }
 
                 function probeTranscode(item){
@@ -1106,6 +1150,38 @@ object WebClientHtml {
                             $('perrorCode').textContent = cur ? (cur + ' \u00b7 ' + note) : note;
                         }
                     }).catch(function(){});
+                }
+
+                function copyStreamUrl(){
+                    if (!mediaMeta || !mediaMeta.id) return;
+                    var url = location.origin + '/api/v1/stream/' + encodeURIComponent(mediaMeta.id);
+                    if (authToken){
+                        url += (url.indexOf('?') === -1 ? '?' : '&') + 'token=' + encodeURIComponent(authToken);
+                    }
+                    var done = function(){
+                        showToast('Stream URL copied. In VLC press Ctrl+N (or Media > Open Network Stream) and paste it.');
+                    };
+                    var fallback = function(){
+                        var ta = document.createElement('textarea');
+                        ta.value = url;
+                        ta.setAttribute('readonly', '');
+                        ta.style.position = 'fixed';
+                        ta.style.left = '-9999px';
+                        document.body.appendChild(ta);
+                        ta.select();
+                        try {
+                            document.execCommand('copy');
+                            done();
+                        } catch(e){
+                            showToast('Copy failed. Open the app in a modern browser to copy the VLC link.');
+                        }
+                        document.body.removeChild(ta);
+                    };
+                    if (navigator.clipboard && navigator.clipboard.writeText){
+                        navigator.clipboard.writeText(url).then(done, fallback);
+                    } else {
+                        fallback();
+                    }
                 }
 
                 function togglePlay(){
@@ -1238,6 +1314,10 @@ object WebClientHtml {
                     $('pRetry').addEventListener('click', function(){
                         retryPlayback();
                     });
+                    var vlcBtn = $('pVlc');
+                    if (vlcBtn) vlcBtn.addEventListener('click', copyStreamUrl);
+                    var vlcErrBtn = $('pVlcErr');
+                    if (vlcErrBtn) vlcErrBtn.addEventListener('click', copyStreamUrl);
                     $('cSub').addEventListener('click', function(){
                         var menu = $('subMenu');
                         if (menu.classList.contains('open')) menu.classList.remove('open');

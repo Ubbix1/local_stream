@@ -65,7 +65,7 @@ class HttpRequestHandler(
             }
 
             val isAuthBypass = authBypass(path, method)
-            if (!isAuthBypass && !authorized(headers)) {
+            if (!isAuthBypass && !authorized(headers, fullPath)) {
                 sendErrorResponse(401, "AUTH_REQUIRED", "Access PIN required. Verify your PIN at /api/v1/auth/verify.")
                 return
             }
@@ -231,8 +231,13 @@ class HttpRequestHandler(
         return false
     }
 
-    private fun authorized(headers: Map<String, String>): Boolean {
+    private fun authorized(headers: Map<String, String>, fullPath: String): Boolean {
         if (!accessControl.pinRequired) return true
+        // Query string (?token=...) lets external players such as VLC, which
+        // cannot send the auth header or cookie, stream a PIN-protected
+        // library via a shareable URL (the web client appends it in the player).
+        val fromQuery = queryParam(fullPath, "token")?.takeIf { it.isNotBlank() }
+        if (fromQuery != null && accessControl.isValidToken(fromQuery)) return true
         return accessControl.isValidToken(extractToken(headers))
     }
 
