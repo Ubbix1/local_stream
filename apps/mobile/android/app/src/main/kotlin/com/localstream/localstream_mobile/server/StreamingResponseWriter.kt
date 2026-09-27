@@ -17,7 +17,8 @@ object StreamingResponseWriter {
         source: MediaSource,
         rangeResult: RangeRequestParser.RangeResult,
         stateHolder: ServerStateHolder,
-        isHeadOnly: Boolean = false
+        isHeadOnly: Boolean = false,
+        onBytes: ((Long) -> Unit)? = null
     ) {
         val bufferedOut = BufferedOutputStream(outputStream, BUFFER_SIZE)
         val totalSize = source.sizeBytes ?: -1L
@@ -34,7 +35,8 @@ object StreamingResponseWriter {
                     rangeResult.end,
                     totalSize,
                     stateHolder,
-                    isHeadOnly
+                    isHeadOnly,
+                    onBytes
                 )
             }
             is RangeRequestParser.RangeResult.Full -> {
@@ -43,7 +45,8 @@ object StreamingResponseWriter {
                     source,
                     totalSize,
                     stateHolder,
-                    isHeadOnly
+                    isHeadOnly,
+                    onBytes
                 )
             }
         }
@@ -54,7 +57,8 @@ object StreamingResponseWriter {
         source: MediaSource,
         totalSize: Long,
         stateHolder: ServerStateHolder,
-        isHeadOnly: Boolean
+        isHeadOnly: Boolean,
+        onBytes: ((Long) -> Unit)?
     ) {
         val headers = StringBuilder()
         headers.append("HTTP/1.1 200 OK\r\n")
@@ -80,7 +84,7 @@ object StreamingResponseWriter {
         var stream: InputStream? = null
         try {
             stream = source.openInputStream()
-            pipeStream(stream, out, stateHolder)
+            pipeStream(stream, out, stateHolder, onBytes)
         } catch (_: SocketException) {
             // Client disconnected mid-stream; cleanup in finally
         } catch (_: Exception) {
@@ -100,7 +104,8 @@ object StreamingResponseWriter {
         end: Long,
         totalSize: Long,
         stateHolder: ServerStateHolder,
-        isHeadOnly: Boolean
+        isHeadOnly: Boolean,
+        onBytes: ((Long) -> Unit)?
     ) {
         val contentLength = end - start + 1
         val totalSizeStr = if (totalSize >= 0) totalSize.toString() else "*"
@@ -128,7 +133,7 @@ object StreamingResponseWriter {
         var stream: InputStream? = null
         try {
             stream = source.readRange(start, end)
-            pipeStream(stream, out, stateHolder)
+            pipeStream(stream, out, stateHolder, onBytes)
         } catch (_: SocketException) {
             // Client disconnected mid-stream; cleanup in finally
         } catch (_: Exception) {
@@ -169,12 +174,13 @@ object StreamingResponseWriter {
         headers.append("Content-Disposition: inline; filename=\"$fallback\"; filename*=UTF-8''$encoded\r\n")
     }
 
-    private fun pipeStream(input: InputStream, out: BufferedOutputStream, stateHolder: ServerStateHolder) {
+    private fun pipeStream(input: InputStream, out: BufferedOutputStream, stateHolder: ServerStateHolder, onBytes: ((Long) -> Unit)? = null) {
         val buffer = ByteArray(BUFFER_SIZE)
         var read: Int
         while (input.read(buffer).also { read = it } != -1) {
             out.write(buffer, 0, read)
             stateHolder.addBytesTransferred(read.toLong())
+            onBytes?.invoke(read.toLong())
         }
         out.flush()
     }

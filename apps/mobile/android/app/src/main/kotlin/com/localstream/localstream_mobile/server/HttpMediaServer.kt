@@ -20,6 +20,7 @@ class HttpMediaServer(
     private val serverEvents: ServerEvents,
     private val accessControl: AccessControl,
     private val metadataCache: MediaMetadataCache,
+    private val clientTracker: ClientTracker,
     private val maxConnections: Int = 32
 ) {
     private val isRunning = AtomicBoolean(false)
@@ -83,7 +84,8 @@ class HttpMediaServer(
                                 port = boundPort,
                                 serverEvents = serverEvents,
                                 accessControl = accessControl,
-                                metadataCache = metadataCache
+                                metadataCache = metadataCache,
+                                clientTracker = clientTracker
                             )
                             handler.handle()
                         } finally {

@@ -105,6 +105,12 @@ class LocalStreamMethodChannel(
                 result.success(status.toMap())
             }
 
+            "getClients" -> {
+                val service = LocalStreamService.instance
+                val clients = service?.clientTracker?.snapshots() ?: emptyList()
+                result.success(clients.map { it.toMap() })
+            }
+
             "getNetworkAddresses" -> {
                 val service = LocalStreamService.instance
                 val ips = service?.networkInfoProvider?.getLocalIpAddresses() ?: emptyList()

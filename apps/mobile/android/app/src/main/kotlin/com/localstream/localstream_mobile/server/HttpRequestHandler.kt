@@ -7,6 +7,7 @@ import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketException
 
@@ -17,7 +18,8 @@ class HttpRequestHandler(
     private val port: Int,
     private val serverEvents: ServerEvents,
     private val accessControl: AccessControl,
-    private val metadataCache: MediaMetadataCache
+    private val metadataCache: MediaMetadataCache,
+    private val clientTracker: ClientTracker
 ) {
     fun handle() {
         stateHolder.incrementClients()
@@ -64,6 +66,10 @@ class HttpRequestHandler(
                 }
             }
 
+            // Register the connecting device so the app can show who is connected/playing
+            val clientIp = (socket.remoteSocketAddress as? InetSocketAddress)?.address?.hostAddress
+            clientTracker.recordRequest(clientIp, headers["user-agent"])
+
             val isAuthBypass = authBypass(path, method)
             if (!isAuthBypass && !authorized(headers, fullPath)) {
                 sendErrorResponse(401, "AUTH_REQUIRED", "Access PIN required. Verify your PIN at /api/v1/auth/verify.")
@@ -101,6 +107,10 @@ class HttpRequestHandler(
                 method == "GET" && path == "/api/v1/status" -> {
                     val body = ApiResponseBuilder.buildStatusJson(stateHolder.buildSnapshot())
                     sendJsonResponse(200, "OK", body)
+                }
+
+                method == "GET" && path == "/api/v1/clients" -> {
+                    sendJsonResponse(200, "OK", clientTracker.snapshotsJson())
                 }
 
                 method == "GET" && path == "/api/v1/folders" -> {
@@ -332,13 +342,20 @@ class HttpRequestHandler(
             RangeRequestParser.RangeResult.Full
         }
 
-        StreamingResponseWriter.writeMediaResponse(
-            outputStream = socket.getOutputStream(),
-            source = source,
-            rangeResult = rangeResult,
-            stateHolder = stateHolder,
-            isHeadOnly = isHeadOnly
-        )
+        val clientIp = (socket.remoteSocketAddress as? InetSocketAddress)?.address?.hostAddress
+        val playSession = if (isHeadOnly) null else clientTracker.startPlaySession(clientIp, id, source.displayName)
+        try {
+            StreamingResponseWriter.writeMediaResponse(
+                outputStream = socket.getOutputStream(),
+                source = source,
+                rangeResult = rangeResult,
+                stateHolder = stateHolder,
+                isHeadOnly = isHeadOnly,
+                onBytes = { bytes -> clientTracker.recordStreamBytes(clientIp, playSession, bytes) }
+            )
+        } finally {
+            clientTracker.finishPlaySession(clientIp, playSession)
+        }
     }
 
     private fun handleThumbnail(id: String, isHeadOnly: Boolean) {

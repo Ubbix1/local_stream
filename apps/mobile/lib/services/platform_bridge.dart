@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import '../models/connected_client.dart';
 import '../models/media_item.dart';
 import '../models/server_status.dart';
 
@@ -54,6 +55,19 @@ class PlatformBridge {
     } catch (_) {
       return const [];
     }
+  }
+
+  Future<List<ConnectedClient>> getClients() async {
+    try {
+      final list = await _methodChannel.invokeMethod<List<dynamic>>('getClients');
+      if (list != null) {
+        return list
+            .whereType<Map<dynamic, dynamic>>()
+            .map(ConnectedClient.fromMap)
+            .toList();
+      }
+    } catch (_) {}
+    return const [];
   }
 
   Future<List<MediaItem>> listFiles() async {

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'features/home/home_screen.dart';
 import 'features/library/library_screen.dart';
 import 'features/server/server_screen.dart';
+import 'features/clients/clients_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'services/media_service.dart';
 import 'services/server_service.dart';
@@ -82,6 +83,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     HomeScreen(),
     LibraryScreen(),
     ServerScreen(),
+    ClientsScreen(),
     SettingsScreen(),
   ];
 
@@ -110,6 +112,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             icon: Icon(Icons.dns_outlined),
             selectedIcon: Icon(Icons.dns),
             label: 'Server',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.devices_outlined),
+            selectedIcon: Icon(Icons.devices),
+            label: 'Clients',
           ),
           NavigationDestination(
             icon: Icon(Icons.tune_outlined),

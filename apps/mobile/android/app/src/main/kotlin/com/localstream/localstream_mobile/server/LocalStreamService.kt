@@ -46,6 +46,10 @@ class LocalStreamService : Service() {
         private set
     lateinit var metadataCache: MediaMetadataCache
         private set
+    lateinit var clientTracker: ClientTracker
+        private set
+    lateinit var hostnameResolver: MdnsHostnameResolver
+        private set
     private lateinit var deviceFeedbackClient: DeviceFeedbackClient
 
     private val binder = LocalBinder()
@@ -106,7 +110,9 @@ class LocalStreamService : Service() {
         serverEvents = ServerEvents()
         metadataCache = MediaMetadataCache(applicationContext)
         storageManager.metadataCache = metadataCache
-        mediaServer = HttpMediaServer(storageManager, stateHolder, serverEvents, accessControl, metadataCache)
+        hostnameResolver = MdnsHostnameResolver(applicationContext)
+        clientTracker = ClientTracker(hostnameResolver)
+        mediaServer = HttpMediaServer(storageManager, stateHolder, serverEvents, accessControl, metadataCache, clientTracker)
         networkInfoProvider = NetworkInfoProvider(applicationContext)
         mdnsService = MdnsService(applicationContext)
         deviceFeedbackClient = DeviceFeedbackClient(applicationContext)
@@ -297,6 +303,7 @@ class LocalStreamService : Service() {
     override fun onDestroy() {
         stopServerInternal()
         mdnsService.unregister()
+        hostnameResolver.shutdown()
         serviceScope.cancel()
         instance = null
         super.onDestroy()
