@@ -1,9 +1,14 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 import '../../core/errors/app_error.dart';
 import '../../core/network/api_client.dart';
 import '../../repositories/media_repository.dart';
+import '../../services/discovery_service.dart';
 import '../../services/server_store.dart';
 import '../browser/browser_screen.dart';
 
@@ -17,6 +22,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _store = ServerStore();
   final _addressController = TextEditingController();
+  final _discovery = DiscoveryService();
+  final _foundServers = <DiscoveredServer>[];
+  final _probedKeys = <String>{};
+
+  StreamSubscription<DiscoveredServer>? _discoverySub;
+  Timer? _scanTimer;
+  bool _scanning = false;
 
   String? _savedAddress;
   bool _configuring = false;
@@ -33,6 +45,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _scanTimer?.cancel();
+    _discoverySub?.cancel();
+    _discovery.dispose();
     _addressController.dispose();
     super.dispose();
   }
@@ -45,6 +60,57 @@ class _HomeScreenState extends State<HomeScreen> {
       _configuring = address == null;
       _addressController.text = address ?? '';
     });
+    if (_configuring) await _startDiscovery();
+  }
+
+  Future<void> _startDiscovery() async {
+    if (!DiscoveryService.supported) return;
+    _scanTimer?.cancel();
+    setState(() {
+      _scanning = true;
+      _foundServers.clear();
+      _probedKeys.clear();
+    });
+    _discoverySub?.cancel();
+    _discoverySub = _discovery.stream.listen(_onDiscovered);
+    await _discovery.start();
+    if (!mounted) return;
+    _scanTimer = Timer(const Duration(seconds: 6), () {
+      if (mounted) setState(() => _scanning = false);
+    });
+  }
+
+  Future<void> _onDiscovered(DiscoveredServer server) async {
+    if (!_probedKeys.add(server.baseUrl)) return;
+    final verified = await _probe(server.baseUrl);
+    if (!mounted || verified == null) return;
+    setState(() => _foundServers.add(verified));
+  }
+
+  Future<DiscoveredServer?> _probe(String baseUrl) async {
+    try {
+      final res = await http
+          .get(Uri.parse('$baseUrl/api/v1/info'))
+          .timeout(const Duration(milliseconds: 2500));
+      if (res.statusCode != 200) return null;
+      final body = jsonDecode(res.body);
+      if (body is! Map<String, dynamic> || body['name'] != 'LocalStream') {
+        return null;
+      }
+      final uri = Uri.parse(baseUrl);
+      final device = (body['deviceName'] as String?)?.trim();
+      final version = (body['serverVersion'] as String?)?.trim() ?? '';
+      final label = (device == null || device.isEmpty)
+          ? 'LocalStream server'
+          : (version.isEmpty ? device : '$device \u00b7 v$version');
+      return DiscoveredServer(
+        name: label,
+        host: uri.host,
+        port: uri.port,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _openBrowser() async {
@@ -69,6 +135,10 @@ class _HomeScreenState extends State<HomeScreen> {
       address = 'http://$address';
     }
     final clean = address.endsWith('/') ? address.substring(0, address.length - 1) : address;
+    await _connectTo(clean);
+  }
+
+  Future<void> _connectTo(String clean) async {
     setState(() {
       _busy = true;
       _error = null;
@@ -228,7 +298,10 @@ class _HomeScreenState extends State<HomeScreen> {
             _FocusButton(
               icon: Icons.settings,
               label: 'Change server',
-              onActivate: () => setState(() => _configuring = true),
+              onActivate: () {
+                setState(() => _configuring = true);
+                _startDiscovery();
+              },
             ),
           ],
         ),
@@ -265,6 +338,65 @@ class _HomeScreenState extends State<HomeScreen> {
               onSubmitted: (_) => _connect(),
             ),
           ),
+          const SizedBox(height: 28),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'On this network',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              TextButton.icon(
+                onPressed: DiscoveryService.supported
+                    ? _startDiscovery
+                    : null,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Scan'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          if (_scanning)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                ),
+              ),
+            )
+          else if (_foundServers.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                DiscoveryService.supported
+                    ? 'No LocalStream servers found yet \u2014 make sure the '
+                        'server app is running on the same Wi-Fi or hotspot, '
+                        'or enter its address below.'
+                    : 'Nearby-server discovery is unavailable on this '
+                        'device. Enter the server address below.',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: scheme.onSurfaceVariant),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          if (_foundServers.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            for (final server in _foundServers)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _ServerTile(
+                  server: server,
+                  enabled: !_busy,
+                  onActivate: () => _connectTo(server.baseUrl),
+                ),
+              ),
+          ],
           const SizedBox(height: 16),
           if (_error != null)
             Padding(
@@ -379,6 +511,103 @@ class _FocusButton extends StatelessWidget {
                         color: focused ? scheme.onPrimary : scheme.onSurface,
                       ),
                     ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Remote-friendly tile for a discovered server, showing device name + URL.
+class _ServerTile extends StatelessWidget {
+  const _ServerTile({
+    required this.server,
+    required this.onActivate,
+    this.enabled = true,
+  });
+
+  final DiscoveredServer server;
+  final VoidCallback onActivate;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      onKeyEvent: (node, event) {
+        if (enabled &&
+            event is KeyDownEvent &&
+            (event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.select ||
+                event.logicalKey == LogicalKeyboardKey.numpadEnter)) {
+          onActivate();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Builder(
+        builder: (context) {
+          final focused = Focus.of(context).hasFocus;
+          final scheme = Theme.of(context).colorScheme;
+          return InkWell(
+            onTap: enabled ? onActivate : null,
+            borderRadius: BorderRadius.circular(14),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: focused ? scheme.primary : scheme.surfaceContainerHigh,
+                border: Border.all(
+                  color: focused ? scheme.primary : scheme.outlineVariant,
+                  width: 2,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.tv,
+                    size: 28,
+                    color: focused ? scheme.onPrimary : scheme.onSurface,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          server.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: focused ? scheme.onPrimary : scheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          server.baseUrl,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: focused
+                                ? scheme.onPrimary.withValues(alpha: 0.8)
+                                : scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 28,
+                    color: focused ? scheme.onPrimary : scheme.onSurfaceVariant,
                   ),
                 ],
               ),
