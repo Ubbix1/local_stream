@@ -128,7 +128,15 @@ jobs:
         working-directory: apps/mobile
         run: flutter pub get
 
-      # Scoped to :app so plugin subprojects (whose own suites may fail for
+      # gradlew is gitignored (Flutter's Android template does this), so a
+      # clean checkout has no wrapper. `flutter build apk` regenerates it as
+      # part of the normal build, which both creates the wrapper and proves
+      # the app still compiles.
+      - name: build debug APK (regenerates the gradle wrapper)
+        working-directory: apps/mobile
+        run: flutter build apk --debug
+
+      # Scoped to :app so plugin subprojects (whose own suites can fail for
       # unrelated reasons) cannot fail this build. Our Kotlin tests cover
       # RangeRequestParser, UserAgentParser and MimeTypeDetector.
       - name: native unit tests

@@ -167,8 +167,12 @@ Native Android unit tests live in `apps/mobile/android/app/src/test` and
 run with:
 
 ```text
-cd apps/mobile/android && ./gradlew test
+cd apps/mobile && flutter build apk --debug   # regenerates the gradle wrapper
+cd apps/mobile/android && ./gradlew :app:testDebugUnitTest
 ```
+
+`gradlew` is gitignored because Flutter's Android template creates it
+locally, so build once before invoking the wrapper on a fresh clone.
 
 Further notes are in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md),
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and
