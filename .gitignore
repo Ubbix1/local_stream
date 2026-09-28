@@ -38,3 +38,13 @@ apps/mobile/assets/_generated/
 
 # ── coverage / test temp ──────────────────────────
 **/coverage/
+.continue/agents/new-config.yaml
+.continue/prompts/new-prompt.md
+.continue/rules/new-rule.md
+
+# ── documentation ─────────────────────────────────
+# NOTE: Markdown documentation is deliberately TRACKED, never ignored.
+# docs/API.md is the only written record of the /api/v1 contract; AGENT.md,
+# modular.md and client.md are the architecture baseline. Do NOT add broad
+# rules such as `*.md` or `docs/` here — they will delete that corpus.
+
