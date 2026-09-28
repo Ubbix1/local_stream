@@ -70,11 +70,6 @@ class HomeScreen extends StatelessWidget {
 
             // Quick Stats Grid
             _buildMetricsGrid(context, server, media, status),
-
-            const SizedBox(height: 16),
-
-            // Quick Help / Share Card
-            _buildHowToConnectCard(context, isRunning),
           ],
         ),
       ),
@@ -243,7 +238,8 @@ class HomeScreen extends StatelessWidget {
             Text(
               'Devices on the same Wi-Fi or hotspot can open these in any browser or media player:',
               style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7)),
+                  color:
+                      theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7)),
             ),
             const SizedBox(height: 12),
             if (addresses.isEmpty)
@@ -264,10 +260,11 @@ class HomeScreen extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-color: colorScheme.surfaceContainerHighest,
+                    color: colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                        color:
+                            colorScheme.outlineVariant.withValues(alpha: 0.5)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -386,67 +383,12 @@ color: colorScheme.surfaceContainerHighest,
             Text(
               subtitle,
               style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6)),
+                  color:
+                      theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6)),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildHowToConnectCard(BuildContext context, bool isRunning) {
-    final theme = Theme.of(context);
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.info_outline, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  'How to connect & stream',
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            _buildStepRow('1',
-                'Connect your laptop, TV, or other device to the same Wi-Fi or Phone Hotspot.'),
-            const SizedBox(height: 8),
-            _buildStepRow(
-                '2', 'Open any browser and type the URL shown above.'),
-            const SizedBox(height: 8),
-            _buildStepRow('3',
-                'Or in VLC / media player: Open Network Stream and paste a file\'s stream link.'),
-            const SizedBox(height: 8),
-            _buildStepRow('4',
-                'Share any video/audio from Files, Telegram, or WhatsApp using Android Share.'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepRow(String number, String text) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CircleAvatar(
-          radius: 10,
-          child: Text(number,
-              style:
-                  const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(text, style: const TextStyle(fontSize: 13, height: 1.3)),
-        ),
-      ],
     );
   }
 }

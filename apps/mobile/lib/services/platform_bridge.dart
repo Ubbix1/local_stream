@@ -5,8 +5,10 @@ import '../models/media_item.dart';
 import '../models/server_status.dart';
 
 class PlatformBridge {
-  static const MethodChannel _methodChannel = MethodChannel('localstream/mobile');
-  static const EventChannel _eventChannel = EventChannel('localstream/mobile/events');
+  static const MethodChannel _methodChannel =
+      MethodChannel('localstream/mobile');
+  static const EventChannel _eventChannel =
+      EventChannel('localstream/mobile/events');
 
   static final PlatformBridge _instance = PlatformBridge._internal();
   factory PlatformBridge() => _instance;
@@ -23,7 +25,8 @@ class PlatformBridge {
 
   Future<bool> startServer({int port = 8080}) async {
     try {
-      final res = await _methodChannel.invokeMethod<bool>('startServer', {'port': port});
+      final res = await _methodChannel
+          .invokeMethod<bool>('startServer', {'port': port});
       return res ?? false;
     } catch (_) {
       return false;
@@ -41,7 +44,8 @@ class PlatformBridge {
 
   Future<ServerStatus> getStatus() async {
     try {
-      final map = await _methodChannel.invokeMethod<Map<dynamic, dynamic>>('getStatus');
+      final map =
+          await _methodChannel.invokeMethod<Map<dynamic, dynamic>>('getStatus');
       if (map != null) {
         return ServerStatus.fromMap(map);
       }
@@ -51,7 +55,8 @@ class PlatformBridge {
 
   Future<AppVersion> getAppVersion() async {
     try {
-      final map = await _methodChannel.invokeMethod<Map<dynamic, dynamic>>('getAppVersion');
+      final map = await _methodChannel
+          .invokeMethod<Map<dynamic, dynamic>>('getAppVersion');
       if (map != null) {
         return AppVersion(
           versionName: (map['versionName'] as String?) ?? '',
@@ -64,7 +69,8 @@ class PlatformBridge {
 
   Future<List<String>> getNetworkAddresses() async {
     try {
-      final list = await _methodChannel.invokeMethod<List<dynamic>>('getNetworkAddresses');
+      final list = await _methodChannel
+          .invokeMethod<List<dynamic>>('getNetworkAddresses');
       return list?.map((e) => e.toString()).toList() ?? const [];
     } catch (_) {
       return const [];
@@ -73,7 +79,8 @@ class PlatformBridge {
 
   Future<List<ConnectedClient>> getClients() async {
     try {
-      final list = await _methodChannel.invokeMethod<List<dynamic>>('getClients');
+      final list =
+          await _methodChannel.invokeMethod<List<dynamic>>('getClients');
       if (list != null) {
         return list
             .whereType<Map<dynamic, dynamic>>()
@@ -84,9 +91,20 @@ class PlatformBridge {
     return const [];
   }
 
+  Future<bool> removeClient(String ip) async {
+    try {
+      final res =
+          await _methodChannel.invokeMethod<bool>('removeClient', {'ip': ip});
+      return res ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<List<MediaItem>> listFiles() async {
     try {
-      final list = await _methodChannel.invokeMethod<List<dynamic>>('listFiles');
+      final list =
+          await _methodChannel.invokeMethod<List<dynamic>>('listFiles');
       if (list != null) {
         return list
             .whereType<Map<dynamic, dynamic>>()
@@ -99,7 +117,8 @@ class PlatformBridge {
 
   Future<int> addSafFolder(String uri) async {
     try {
-      final count = await _methodChannel.invokeMethod<int>('addSafFolder', {'uri': uri});
+      final count =
+          await _methodChannel.invokeMethod<int>('addSafFolder', {'uri': uri});
       return count ?? 0;
     } catch (_) {
       return 0;
@@ -117,7 +136,8 @@ class PlatformBridge {
 
   Future<bool> removeMediaItem(String id) async {
     try {
-      final res = await _methodChannel.invokeMethod<bool>('removeMediaItem', {'id': id});
+      final res = await _methodChannel
+          .invokeMethod<bool>('removeMediaItem', {'id': id});
       return res ?? false;
     } catch (_) {
       return false;
@@ -126,7 +146,8 @@ class PlatformBridge {
 
   Future<MediaItem?> importMediaItem(String uri, {String? targetName}) async {
     try {
-      final map = await _methodChannel.invokeMethod<Map<dynamic, dynamic>>('importMediaItem', {
+      final map = await _methodChannel
+          .invokeMethod<Map<dynamic, dynamic>>('importMediaItem', {
         'uri': uri,
         'targetName': targetName,
       });
@@ -139,7 +160,8 @@ class PlatformBridge {
 
   Future<List<String>> getPendingShares() async {
     try {
-      final list = await _methodChannel.invokeMethod<List<dynamic>>('getPendingShares');
+      final list =
+          await _methodChannel.invokeMethod<List<dynamic>>('getPendingShares');
       return list?.map((e) => e.toString()).toList() ?? const [];
     } catch (_) {
       return const [];

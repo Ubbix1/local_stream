@@ -312,9 +312,11 @@ object WebClientHtml {
                 padding:24px;color:var(--text);
             }
             .cover-layer .hint{font-size:13px;color:var(--muted);max-width:520px}
+            .cover-layer[hidden]{display:none}
             .spinner{
                 position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;
             }
+            .spinner[hidden]{display:none}
             .ring{
                 width:46px;height:46px;border-radius:50%;
                 border:3px solid rgba(255,255,255,.18);border-top-color:var(--accent);
@@ -332,6 +334,7 @@ object WebClientHtml {
             .perror .prow{flex-wrap:wrap;justify-content:center}
             .perror p{max-width:640px;font-size:13px;color:var(--text);line-height:1.5;margin:0}
             .perror p .err-code{display:block;margin-top:4px;font-size:11px;color:var(--muted)}
+            .perror[hidden]{display:none}
 
             .controls{
                 background:rgba(13,17,23,.82);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
@@ -1044,23 +1047,61 @@ object WebClientHtml {
                     setMuteIcon(false);
                 }
 
+                function showCover(){ cover.hidden = false; }
+                function hideCover(){ cover.hidden = true; }
+
+                /* Reads the live <video>/<audio> state so the center overlay and
+                   the play/pause icon are reconciled with reality rather than
+                   relying solely on events that a browser may miss. */
+                function mediaState(){
+                    if (!mediaEl) return { ended:false, paused:true, progressing:false };
+                    return {
+                        ended: !!mediaEl.ended,
+                        paused: !!mediaEl.paused,
+                        // Same heuristic onMediaError uses for "actually playing".
+                        progressing: !mediaEl.paused && mediaEl.readyState >= 2 &&
+                            isFinite(mediaEl.currentTime) && mediaEl.currentTime > 0,
+                        error: mediaEl.error ? true : false
+                    };
+                }
+                function syncOverlay(){
+                    if (!mediaEl){ showCover(); setPlayIcon(false); return; }
+                    var st = mediaState();
+                    if (st.ended || (st.error && !st.progressing)){
+                        spinner.hidden = true;
+                        showCover();
+                        setPlayIcon(false);
+                        return;
+                    }
+                    if (!st.paused){
+                        hideCover();
+                        setPlayIcon(true);
+                        return;
+                    }
+                    spinner.hidden = true;
+                    showCover();
+                    setPlayIcon(false);
+                }
+
                 function bindMediaEvents(){
                     mediaEl.addEventListener('waiting', function(){ spinner.hidden = false; });
                     mediaEl.addEventListener('stalled', function(){ spinner.hidden = false; });
                     mediaEl.addEventListener('playing', function(){
                         spinner.hidden = true;
-                        cover.hidden = true;
                         $('perror').hidden = true;
                         retryingAt = 0;
+                        syncOverlay();
                     });
                     mediaEl.addEventListener('canplay', function(){ spawnHideControls(); });
                     mediaEl.addEventListener('play', function(){ setPlayIcon(true); });
-                    mediaEl.addEventListener('pause', function(){ setPlayIcon(false); showControls(); });
+                    mediaEl.addEventListener('pause', function(){
+                        syncOverlay();
+                        showControls();
+                    });
                     mediaEl.addEventListener('ended', function(){
-                        setPlayIcon(false);
+                        syncOverlay();
                         showControls();
                         $('coverHint').textContent = 'Playback finished.';
-                        cover.hidden = false;
                         cover.querySelector('button').focus();
                     });
                     mediaEl.addEventListener('timeupdate', updateTime);
@@ -1082,7 +1123,8 @@ object WebClientHtml {
                         return;
                     }
                     spinner.hidden = true;
-                    cover.hidden = true;
+                    showCover();
+                    setPlayIcon(false);
                     var code = el && el.error ? el.error.code : 0;
                     var detail = el && el.error && el.error.message ? el.error.message : '';
                     var isDemux = /DEMUXER|FFmpegDemuxer|PIPELINE|CODEC/i.test(detail);
@@ -1109,7 +1151,6 @@ object WebClientHtml {
                 function retryPlayback(){
                     if (!mediaEl) return;
                     $('perror').hidden = true;
-                    cover.hidden = true;
                     spinner.hidden = false;
                     retryingAt = Date.now();
                     var src = mediaEl.getAttribute('src');
@@ -1121,6 +1162,7 @@ object WebClientHtml {
                     mediaEl.play().catch(function(err){
                         spinner.hidden = true;
                         retryingAt = 0;
+                        syncOverlay();
                         if (err && err.name !== 'AbortError'){
                             $('perrorText').textContent = 'Still unable to play this media in this browser. Try the VLC button to stream it externally.';
                             $('perrorCode').textContent = err ? String(err.name) : '';
@@ -1191,7 +1233,9 @@ object WebClientHtml {
                 function togglePlay(){
                     if (!mediaEl) return;
                     if (mediaEl.paused){
-                        mediaEl.play().catch(function(err){
+                        mediaEl.play().then(syncOverlay).catch(function(err){
+                            showCover();
+                            syncOverlay();
                             if (err && err.name === 'NotAllowedError'){
                                 $('perrorText').textContent = 'Playback did not start automatically. Tap Play again to begin.';
                                 $('perrorCode').textContent = '';
@@ -1204,6 +1248,7 @@ object WebClientHtml {
                         });
                     } else {
                         mediaEl.pause();
+                        syncOverlay();
                     }
                 }
 
@@ -1295,7 +1340,7 @@ object WebClientHtml {
                 }
 
                 function wirePlayer(){
-                    $('coverPlay').addEventListener('click', function(){ cover.hidden = true; togglePlay(); });
+                    $('coverPlay').addEventListener('click', function(){ hideCover(); togglePlay(); });
                     $('pClose').addEventListener('click', closePlayer);
                     $('cPlay').addEventListener('click', togglePlay);
                     $('cMute').addEventListener('click', function(){

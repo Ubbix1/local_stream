@@ -121,6 +121,13 @@ class LocalStreamMethodChannel(
                 result.success(clients.map { it.toMap() })
             }
 
+            "removeClient" -> {
+                val ip = call.argument<String>("ip")
+                val service = LocalStreamService.instance
+                val removed = service?.clientTracker?.removeClient(ip) ?: false
+                result.success(removed)
+            }
+
             "getNetworkAddresses" -> {
                 val service = LocalStreamService.instance
                 val ips = service?.networkInfoProvider?.getLocalIpAddresses() ?: emptyList()

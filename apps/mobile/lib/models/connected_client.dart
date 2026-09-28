@@ -22,6 +22,14 @@ class ConnectedPlayback {
       bytes: (map['bytes'] as num?)?.toInt() ?? 0,
     );
   }
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'name': name,
+        'startedAtMs': startedAtMs,
+        'active': active,
+        'bytes': bytes,
+      };
 }
 
 class ConnectedClient {
@@ -33,6 +41,7 @@ class ConnectedClient {
   final String? platform;
   final String? device;
   final String? hostname;
+  final String? userAgent;
   final bool online;
   final int firstSeenMs;
   final int lastSeenMs;
@@ -48,6 +57,7 @@ class ConnectedClient {
     this.platform,
     this.device,
     this.hostname,
+    this.userAgent,
     required this.online,
     required this.firstSeenMs,
     required this.lastSeenMs,
@@ -65,6 +75,7 @@ class ConnectedClient {
       platform: map['platform'] as String?,
       device: map['device'] as String?,
       hostname: map['hostname'] as String?,
+      userAgent: map['userAgent'] as String?,
       online: map['online'] as bool? ?? false,
       firstSeenMs: (map['firstSeenMs'] as num?)?.toInt() ?? 0,
       lastSeenMs: (map['lastSeenMs'] as num?)?.toInt() ?? 0,
@@ -76,6 +87,27 @@ class ConnectedClient {
           const [],
     );
   }
+
+  Map<String, dynamic> toMap() => {
+        'ip': ip,
+        'label': label,
+        'kind': kind,
+        'browser': browser,
+        'browserVersion': browserVersion,
+        'platform': platform,
+        'device': device,
+        'hostname': hostname,
+        'userAgent': userAgent,
+        'online': online,
+        'firstSeenMs': firstSeenMs,
+        'lastSeenMs': lastSeenMs,
+        'bytes': bytes,
+        'playing': playing.map((p) => p.toMap()).toList(),
+      };
+
+  bool get isVlc => kind == 'vlc';
+  bool get isBrowser => kind == 'browser';
+  bool get isApp => kind == 'app';
 
   String get subtitle {
     final parts = <String>[

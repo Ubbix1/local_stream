@@ -1,7 +1,7 @@
 name: localstream_mobile
 description: LocalStream — turns your Android phone into a local LAN media server.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -33,6 +33,9 @@ dependencies:
 
   # Open the latest release page in the browser
   url_launcher: ^6.3.0
+
+  # Remember devices that connected to this server across restarts
+  shared_preferences: ^2.3.0
 
 dev_dependencies:
   flutter_test:

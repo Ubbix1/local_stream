@@ -78,6 +78,12 @@ class ClientTracker(private val resolver: MdnsHostnameResolver) {
         stored.lastActiveMs = System.currentTimeMillis()
     }
 
+    /** Forgets a device (its snapshots and all playback sessions) entirely. */
+    fun removeClient(ip: String?): Boolean {
+        if (ip.isNullOrBlank()) return false
+        return clients.remove(ip) != null
+    }
+
     private fun tryResolveHostname(client: ClientInfo) {
         if (client.hostname != null || client.ip == "127.0.0.1" || client.ip == "::1") return
         resolver.resolve(client.ip)?.let { client.hostname = it }

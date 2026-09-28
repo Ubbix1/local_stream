@@ -8,6 +8,7 @@ import 'features/server/server_screen.dart';
 import 'features/clients/clients_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'services/media_service.dart';
+import 'services/client_store.dart';
 import 'services/server_service.dart';
 import 'services/update_service.dart';
 
@@ -25,6 +26,7 @@ class LocalStreamApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ServerService()),
         ChangeNotifierProvider(create: (_) => MediaService()),
+        ChangeNotifierProvider(create: (_) => ClientStore()..init()),
         ChangeNotifierProvider(create: (_) => UpdateService()..init()),
       ],
       child: MaterialApp(
@@ -158,7 +160,8 @@ class _UpdateBanner extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: Row(
             children: [
-              Icon(Icons.system_update_alt, size: 18, color: scheme.onPrimaryContainer),
+              Icon(Icons.system_update_alt,
+                  size: 18, color: scheme.onPrimaryContainer),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -194,7 +197,8 @@ class _UpdateBanner extends StatelessWidget {
       return;
     }
     try {
-      final launched = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      final launched =
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       if (!launched) throw Exception('launch rejected');
     } catch (_) {
       await Clipboard.setData(ClipboardData(text: url));
