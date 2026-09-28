@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:localstream_protocol/protocol.dart';
+
 import '../../core/errors/app_error.dart';
-import '../../models/library_models.dart';
 import '../../repositories/media_repository.dart';
 import '../player/player_screen.dart';
 
@@ -10,7 +11,7 @@ class _Level {
   _Level({required this.folders, required this.items, this.title});
 
   final List<FolderEntry> folders;
-  final List<MediaEntry> items;
+  final List<MediaItem> items;
   final String? title;
 }
 
@@ -90,7 +91,7 @@ class _BrowserScreenState extends State<BrowserScreen> {
     setState(() => _stack.removeLast());
   }
 
-  Future<void> _open(MediaEntry entry) async {
+  Future<void> _open(MediaItem entry) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => PlayerScreen(
@@ -136,7 +137,10 @@ class _BrowserScreenState extends State<BrowserScreen> {
 
   Widget _buildHeader() {
     final scheme = Theme.of(context).colorScheme;
-    final breadcrumbs = <String>['Library', ..._stack.map((l) => l.title ?? '').where((s) => s.isNotEmpty)];
+    final breadcrumbs = <String>[
+      'Library',
+      ..._stack.map((l) => l.title ?? '').where((s) => s.isNotEmpty)
+    ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(32, 24, 32, 16),
       child: Row(
@@ -210,7 +214,8 @@ class _BrowserScreenState extends State<BrowserScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.folder_off_outlined,
-                size: 56, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                size: 56,
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
             const SizedBox(height: 16),
             const Text('This folder is empty'),
             const SizedBox(height: 24),
@@ -221,8 +226,11 @@ class _BrowserScreenState extends State<BrowserScreen> {
       );
     }
     final cells = <Widget>[
-      for (final folder in level.folders) _FolderTile(folder: folder, onActivate: () => _openFolder(folder)),
-      for (final item in level.items) _MediaTile(repo: widget.repo, entry: item, onActivate: () => _open(item)),
+      for (final folder in level.folders)
+        _FolderTile(folder: folder, onActivate: () => _openFolder(folder)),
+      for (final item in level.items)
+        _MediaTile(
+            repo: widget.repo, entry: item, onActivate: () => _open(item)),
     ];
     return FocusTraversalGroup(
       child: GridView.builder(
@@ -281,7 +289,9 @@ class _FocusCard extends StatelessWidget {
                   : null,
             ),
             child: Material(
-              color: focused ? scheme.surfaceContainerHigh : scheme.surfaceContainerLow,
+              color: focused
+                  ? scheme.surfaceContainerHigh
+                  : scheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(12),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
@@ -342,10 +352,11 @@ class _FolderTile extends StatelessWidget {
 }
 
 class _MediaTile extends StatelessWidget {
-  const _MediaTile({required this.repo, required this.entry, required this.onActivate});
+  const _MediaTile(
+      {required this.repo, required this.entry, required this.onActivate});
 
   final MediaRepository repo;
-  final MediaEntry entry;
+  final MediaItem entry;
   final VoidCallback onActivate;
 
   IconData get _icon => switch (entry.type) {
@@ -385,14 +396,16 @@ class _MediaTile extends StatelessWidget {
                     right: 8,
                     bottom: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.72),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         _fmtDuration(entry.durationMs!),
-                        style: const TextStyle(color: Colors.white, fontSize: 11),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 11),
                       ),
                     ),
                   ),

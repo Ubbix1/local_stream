@@ -15,14 +15,16 @@ class SettingsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings & Diagnostics', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Settings & Diagnostics',
+            style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // Android 13-16 System & Permissions Card
           Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -30,20 +32,27 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.android, color: Colors.greenAccent, size: 20),
+                      const Icon(Icons.android,
+                          color: Colors.greenAccent, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         'Android Architecture (API 33 - 36)',
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _buildSystemRow('Foreground Service', 'Persistent dataSync service with notification'),
-                  _buildSystemRow('UI Independence', 'Server keeps streaming when Flutter UI is closed'),
-                  _buildSystemRow('Storage Access', 'Storage Access Framework (SAF) + Content URIs'),
-                  _buildSystemRow('Android Share', 'Generic ACTION_SEND / ACTION_SEND_MULTIPLE receiver'),
-                  _buildSystemRow('Streaming Engine', 'Pure Kotlin ServerSocket + HTTP Range (206)'),
+                  _buildSystemRow('Foreground Service',
+                      'Persistent dataSync service with notification'),
+                  _buildSystemRow('UI Independence',
+                      'Server keeps streaming when Flutter UI is closed'),
+                  _buildSystemRow('Storage Access',
+                      'Storage Access Framework (SAF) + Content URIs'),
+                  _buildSystemRow('Android Share',
+                      'Generic ACTION_SEND / ACTION_SEND_MULTIPLE receiver'),
+                  _buildSystemRow('Streaming Engine',
+                      'Pure Kotlin ServerSocket + HTTP Range (206)'),
                 ],
               ),
             ),
@@ -57,7 +66,8 @@ class SettingsScreen extends StatelessWidget {
 
           // About LocalStream
           Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -65,11 +75,13 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline, color: colorScheme.primary, size: 20),
+                      Icon(Icons.info_outline,
+                          color: colorScheme.primary, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         'About LocalStream',
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -84,12 +96,14 @@ class SettingsScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('App Version', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      const Text('App Version',
+                          style: TextStyle(fontSize: 12, color: Colors.grey)),
                       Text(
                         updates.installedVersion.isEmpty
                             ? '—'
                             : updates.installedVersion,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -112,7 +126,9 @@ class SettingsScreen extends StatelessWidget {
                           size: 14,
                           color: updates.error != null
                               ? colorScheme.error
-                              : (updates.updateAvailable ? colorScheme.primary : Colors.greenAccent),
+                              : (updates.updateAvailable
+                                  ? colorScheme.primary
+                                  : Colors.greenAccent),
                         ),
                       const SizedBox(width: 6),
                       Expanded(
@@ -139,16 +155,22 @@ class SettingsScreen extends StatelessWidget {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Protocol Version', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      Text('v1 (HTTP /api/v1)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('Protocol Version',
+                          style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text('v1 (HTTP /api/v1)',
+                          style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 4),
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Browser Client', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      Text('SPA + folders/thumbnails', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('Browser Client',
+                          style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text('SPA + folders/thumbnails',
+                          style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
@@ -166,14 +188,18 @@ class SettingsScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check_circle_outline, size: 14, color: Colors.greenAccent),
+          const Icon(Icons.check_circle_outline,
+              size: 14, color: Colors.greenAccent),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                Text(desc, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(desc,
+                    style: const TextStyle(fontSize: 11, color: Colors.grey)),
               ],
             ),
           ),
@@ -236,10 +262,15 @@ class _AccessPinCardState extends State<_AccessPinCard> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Disable web access PIN?'),
-          content: const Text('Anyone on your network will be able to browse and play your library again.'),
+          content: const Text(
+              'Anyone on your network will be able to browse and play your library again.'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Disable')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel')),
+            FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Disable')),
           ],
         ),
       );
@@ -302,7 +333,9 @@ class _AccessPinCardState extends State<_AccessPinCard> {
                   counterText: '',
                 ),
                 validator: (value) {
-                  if (value?.trim() != pinController.text.trim()) return 'PINs do not match';
+                  if (value?.trim() != pinController.text.trim()) {
+                    return 'PINs do not match';
+                  }
                   return null;
                 },
               ),
@@ -310,7 +343,9 @@ class _AccessPinCardState extends State<_AccessPinCard> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           FilledButton(
             onPressed: () {
               if (formKey.currentState?.validate() ?? false) {
@@ -343,12 +378,17 @@ class _AccessPinCardState extends State<_AccessPinCard> {
           children: [
             Row(
               children: [
-                Icon(_pinRequired ? Icons.lock_outline : Icons.lock_open_outlined,
-                    color: _pinRequired ? Colors.amberAccent : Colors.grey, size: 20),
+                Icon(
+                    _pinRequired
+                        ? Icons.lock_outline
+                        : Icons.lock_open_outlined,
+                    color: _pinRequired ? Colors.amberAccent : Colors.grey,
+                    size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'Web Access PIN',
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),

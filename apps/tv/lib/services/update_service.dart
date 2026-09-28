@@ -37,15 +37,14 @@ class UpdateService {
     error = null;
     _notify();
     try {
-      final res = await http
-          .get(
-            Uri.parse('https://api.github.com/repos/Ubbix1/local_stream/releases/latest'),
-            headers: const {
-              'Accept': 'application/vnd.github+json',
-              'User-Agent': 'LocalStream TV',
-            },
-          )
-          .timeout(const Duration(seconds: 10));
+      final res = await http.get(
+        Uri.parse(
+            'https://api.github.com/repos/Ubbix1/local_stream/releases/latest'),
+        headers: const {
+          'Accept': 'application/vnd.github+json',
+          'User-Agent': 'LocalStream TV',
+        },
+      ).timeout(const Duration(seconds: 10));
       if (res.statusCode != 200) {
         error = 'Update check failed (HTTP ${res.statusCode})';
         return;
@@ -74,8 +73,8 @@ class UpdateService {
 
   Future<String> _readInstalledVersion() async {
     try {
-      final map =
-          await _appChannel.invokeMethod<Map<dynamic, dynamic>>('getAppVersion');
+      final map = await _appChannel
+          .invokeMethod<Map<dynamic, dynamic>>('getAppVersion');
       return (map?['versionName'] as String?)?.trim() ?? '';
     } catch (_) {
       return '';

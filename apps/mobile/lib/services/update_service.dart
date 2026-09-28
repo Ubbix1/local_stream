@@ -11,7 +11,8 @@ import 'platform_bridge.dart';
 /// when it is newer than the installed version. The check runs once at startup
 /// and again when the user asks for it — it must never throw into the UI.
 class UpdateService extends ChangeNotifier {
-  UpdateService({PlatformBridge? bridge}) : _bridge = bridge ?? PlatformBridge();
+  UpdateService({PlatformBridge? bridge})
+      : _bridge = bridge ?? PlatformBridge();
 
   final PlatformBridge _bridge;
 
@@ -46,15 +47,14 @@ class UpdateService extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      final res = await http
-          .get(
-            Uri.parse('https://api.github.com/repos/Ubbix1/local_stream/releases/latest'),
-            headers: const {
-              'Accept': 'application/vnd.github+json',
-              'User-Agent': 'LocalStream',
-            },
-          )
-          .timeout(const Duration(seconds: 10));
+      final res = await http.get(
+        Uri.parse(
+            'https://api.github.com/repos/Ubbix1/local_stream/releases/latest'),
+        headers: const {
+          'Accept': 'application/vnd.github+json',
+          'User-Agent': 'LocalStream',
+        },
+      ).timeout(const Duration(seconds: 10));
       if (res.statusCode != 200) {
         error = 'Update check failed (HTTP ${res.statusCode})';
         return;

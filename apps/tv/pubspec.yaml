@@ -14,8 +14,6 @@ dependencies:
   video_player: ^2.9.0
   localstream_protocol:
     path: ../../packages/protocol
-  localstream_media_core:
-    path: ../../packages/media_core
 
 dev_dependencies:
   flutter_test:

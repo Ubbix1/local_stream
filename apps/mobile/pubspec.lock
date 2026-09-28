@@ -152,14 +152,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.10.1"
-  intl:
-    dependency: "direct main"
-    description:
-      name: intl
-      sha256: d6f56758b7d3014a48af9701c085700aac781a92a87a62b1333b46d8879661cf
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.19.0"
   json_annotation:
     dependency: transitive
     description:
@@ -208,20 +200,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.7.2"
-  localstream_media_core:
-    dependency: "direct main"
-    description:
-      path: "../../packages/media_core"
-      relative: true
-    source: path
-    version: "0.0.0"
   localstream_protocol:
     dependency: "direct main"
     description:
       path: "../../packages/protocol"
       relative: true
     source: path
-    version: "0.0.0"
+    version: "1.0.0"
   matcher:
     dependency: transitive
     description:
@@ -255,7 +240,7 @@ packages:
     source: hosted
     version: "1.0.0"
   path:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: path
       sha256: "75cca69d1490965be98c73ceaea117e8a04dd21217b37b292c9ddbec0d955bc5"

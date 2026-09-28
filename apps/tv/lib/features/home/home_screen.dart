@@ -137,13 +137,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _connect() async {
     var address = _addressController.text.trim();
     if (address.isEmpty) {
-      setState(() => _error = 'Enter the server address, e.g. http://192.168.1.20:8080');
+      setState(() =>
+          _error = 'Enter the server address, e.g. http://192.168.1.20:8080');
       return;
     }
     if (!address.startsWith('http://') && !address.startsWith('https://')) {
       address = 'http://$address';
     }
-    final clean = address.endsWith('/') ? address.substring(0, address.length - 1) : address;
+    final clean = address.endsWith('/')
+        ? address.substring(0, address.length - 1)
+        : address;
     await _connectTo(clean);
   }
 
@@ -362,7 +365,10 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 8),
         Text(
           'Streaming from\n$_savedAddress',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
+          style: Theme.of(context)
+              .textTheme
+              .bodyLarge
+              ?.copyWith(color: scheme.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 40),
@@ -429,9 +435,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               TextButton.icon(
-                onPressed: DiscoveryService.supported
-                    ? _startDiscovery
-                    : null,
+                onPressed: DiscoveryService.supported ? _startDiscovery : null,
                 icon: const Icon(Icons.refresh),
                 label: const Text('Scan'),
               ),
@@ -579,7 +583,9 @@ class _FocusButton extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, size: 32, color: focused ? scheme.onPrimary : scheme.onSurface),
+                  Icon(icon,
+                      size: 32,
+                      color: focused ? scheme.onPrimary : scheme.onSurface),
                   const SizedBox(width: 12),
                   Flexible(
                     child: Text(
@@ -666,7 +672,8 @@ class _ServerTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: focused ? scheme.onPrimary : scheme.onSurface,
+                            color:
+                                focused ? scheme.onPrimary : scheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 2),

@@ -166,7 +166,8 @@ class LibraryScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.folder_open,
-                size: 64, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
+                size: 64,
+                color: theme.colorScheme.primary.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
             Text(
               media.searchQuery.isNotEmpty
@@ -182,7 +183,8 @@ class LibraryScreen extends StatelessWidget {
                   ? 'Try a different search term or clear the filter.'
                   : 'Tap "Add Media" below to choose files from Downloads, Documents, Camera, or any other folder.',
               style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7)),
+                  color:
+                      theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7)),
               textAlign: TextAlign.center,
             ),
             if (media.searchQuery.isNotEmpty) ...[

@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:localstream_protocol/protocol.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../models/library_models.dart';
 import '../../repositories/media_repository.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -17,7 +17,7 @@ class PlayerScreen extends StatefulWidget {
 
   final MediaRepository repo;
   final String baseUrl;
-  final MediaEntry entry;
+  final MediaItem entry;
 
   @override
   State<PlayerScreen> createState() => _PlayerScreenState();
@@ -41,7 +41,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   Future<void> _init() async {
     final headers = <String, String>{
-      if (widget.repo.api.token != null) 'X-LocalStream-Token': widget.repo.api.token!,
+      if (widget.repo.api.token != null)
+        'X-LocalStream-Token': widget.repo.api.token!,
     };
     final controller = VideoPlayerController.networkUrl(
       Uri.parse('${widget.baseUrl}/api/v1/stream/${widget.entry.id}'),
@@ -71,9 +72,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     final playing = value.isPlaying;
     final position = value.position;
     final ended = value.isCompleted;
-    if (playing != _isPlaying ||
-        position != _position ||
-        ended) {
+    if (playing != _isPlaying || position != _position || ended) {
       setState(() {
         _isPlaying = playing;
         _position = position;
@@ -180,8 +179,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
               )
             else
               const Center(child: CircularProgressIndicator()),
-            if (_ready && _controlsVisible)
-              _buildControls(scheme),
+            if (_ready && _controlsVisible) _buildControls(scheme),
           ],
         ),
       ),
@@ -238,7 +236,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   onActivate: () => _seekBy(-10),
                 ),
                 _ControlButton(
-                  icon: _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                  icon: _isPlaying
+                      ? Icons.pause_circle_filled
+                      : Icons.play_circle_filled,
                   label: _isPlaying ? 'Pause' : 'Play',
                   primary: true,
                   onActivate: _togglePlay,
@@ -315,9 +315,12 @@ class _ControlButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(icon,
-                      size: 28, color: active ? scheme.onPrimary : Colors.white),
+                      size: 28,
+                      color: active ? scheme.onPrimary : Colors.white),
                   const SizedBox(height: 2),
-                  Text(label, style: const TextStyle(color: Colors.white, fontSize: 10)),
+                  Text(label,
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 10)),
                 ],
               ),
             ),

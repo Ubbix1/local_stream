@@ -48,3 +48,7 @@ apps/mobile/assets/_generated/
 # modular.md and client.md are the architecture baseline. Do NOT add broad
 # rules such as `*.md` or `docs/` here — they will delete that corpus.
 
+
+# Lockfiles for pure-Dart shared packages are resolved on demand;
+# the apps that depend on them own the committed resolution.
+packages/*/pubspec.lock

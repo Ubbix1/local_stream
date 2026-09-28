@@ -13,17 +13,8 @@ dependencies:
   localstream_protocol:
     path: ../../packages/protocol
 
-  localstream_media_core:
-    path: ../../packages/media_core
-
   # State management
   provider: ^6.1.2
-
-  # Format bytes, numbers, dates
-  intl: ^0.19.0
-
-  # Path utilities
-  path: ^1.9.0
 
   # Liquid Glass buttons
   liquid_glass_widgets: ^1.7.2

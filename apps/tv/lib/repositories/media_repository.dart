@@ -1,6 +1,7 @@
+import 'package:localstream_protocol/protocol.dart';
+
 import '../core/errors/app_error.dart';
 import '../core/network/api_client.dart';
-import '../models/library_models.dart';
 
 /// Talks to the LocalStream HTTP API:
 ///   GET  /api/v1/auth/config        -> { pinRequired, ... }
@@ -43,12 +44,10 @@ class MediaRepository {
     try {
       final folderJson = await api.getJson('/api/v1/folders');
       final fileJson = await api.getJson('/api/v1/files');
-      final flat = LibraryView.fromFolderJson({
-        'folders': [],
-        'items': fileJson['items'],
-      });
+      final flat = LibraryView.fromMap(
+          {'folders': const [], 'items': fileJson['items']});
       return LibraryView(
-        folders: LibraryView.fromFolderJson(folderJson).folders,
+        folders: LibraryView.fromMap(folderJson).folders,
         items: flat.items,
       );
     } catch (_) {
@@ -60,12 +59,12 @@ class MediaRepository {
     final data = await api.getJson(
       '/api/v1/files?parent=${Uri.encodeQueryComponent(folderId)}',
     );
-    return LibraryView.fromFolderJson(data);
+    return LibraryView.fromMap(data);
   }
 
-  Future<MediaEntry> detail(String id) async {
+  Future<MediaItem> detail(String id) async {
     final data = await api.getJson('/api/v1/files/${Uri.encodeComponent(id)}');
-    return MediaEntry.fromJson(data);
+    return MediaItem.fromMap(data);
   }
 
   String streamUrl(String id) => '${api.baseUrl}/api/v1/stream/$id';
